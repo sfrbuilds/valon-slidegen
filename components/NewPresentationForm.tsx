@@ -231,48 +231,58 @@ export function NewPresentationForm() {
           </div>
         </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label
-            className="eyebrow"
-            style={{ display: "block", marginBottom: 10 }}
-          >
-            Team
-          </label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {TEAMS.map((t) => (
-              <Chip
-                key={t}
-                active={team === t}
-                onClick={() => setTeam(t)}
-              >
-                {TEAM_LABELS[t]}
-              </Chip>
-            ))}
+        {/* Team + audience share a row: four chips plus two leave plenty
+            of width, and the tone line tucks beneath as a footnote to
+            both. Target length gets its own row below. */}
+        <div
+          style={{
+            display: "flex",
+            gap: 48,
+            rowGap: 24,
+            flexWrap: "wrap",
+            marginBottom: 24,
+          }}
+        >
+          <div>
+            <label
+              className="eyebrow"
+              style={{ display: "block", marginBottom: 10 }}
+            >
+              Team
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {TEAMS.map((t) => (
+                <Chip
+                  key={t}
+                  active={team === t}
+                  onClick={() => setTeam(t)}
+                >
+                  {TEAM_LABELS[t]}
+                </Chip>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label
-            className="eyebrow"
-            style={{ display: "block", marginBottom: 10 }}
-          >
-            Audience
-          </label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {AUDIENCES.map((a) => (
-              <Chip
-                key={a}
-                active={audience === a}
-                onClick={() => setAudience(a)}
-              >
-                {AUDIENCE_LABELS[a]}
-              </Chip>
-            ))}
-          </div>
-          <div style={{ marginTop: 10 }}>
-            <HoverCard
-              inline
-              trigger={
+          <div>
+            <label
+              className="eyebrow"
+              style={{ display: "block", marginBottom: 10 }}
+            >
+              Audience
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {AUDIENCES.map((a) => (
+                <Chip
+                  key={a}
+                  active={audience === a}
+                  onClick={() => setAudience(a)}
+                >
+                  {AUDIENCE_LABELS[a]}
+                </Chip>
+              ))}
+              <HoverCard
+                inline
+                trigger={
                 <span
                   className="body-sm"
                   style={{
@@ -315,6 +325,7 @@ export function NewPresentationForm() {
                 </div>
               </div>
             </HoverCard>
+            </div>
           </div>
         </div>
 
