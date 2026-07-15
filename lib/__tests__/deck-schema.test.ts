@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseCustomTemplate,
   parseDeckDraft,
   parseDeckRedraft,
   parseEvalResult,
   parseSlideRedraft,
   stripCodeFences,
 } from "../deck-schema";
+import { TEMPLATE_LIMITS } from "../templates";
 
 const validDraft = {
   deckTitle: "Q4 Investor Update",
@@ -300,5 +302,110 @@ describe("parseEvalResult", () => {
     expect(
       parseEvalResult(JSON.stringify({ verdict: "meh", findings: [] })).ok
     ).toBe(false);
+  });
+});
+
+describe("parseCustomTemplate", () => {
+  const validTemplate = {
+    id: "custom_abc",
+    name: "Our pipeline review",
+    description: 'Saved from "Q3".',
+    defaultTeam: "gtm",
+    defaultAudience: "internal",
+    targetLength: 2,
+    outline: [
+      { layout: "title", heading: "Cover", hint: "Deck cover." },
+      { layout: "content", heading: "Wins", hint: "3 tight bullets." },
+    ],
+  };
+
+  it("accepts a valid template and preserves the outline", () => {
+    const result = parseCustomTemplate(validTemplate);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.name).toBe("Our pipeline review");
+    expect(result.value.defaultTeam).toBe("gtm");
+    expect(result.value.outline).toHaveLength(2);
+    expect(result.value.outline[1]).toEqual({
+      layout: "content",
+      heading: "Wins",
+      hint: "3 tight bullets.",
+    });
+    expect(result.value.targetLength).toBe(2);
+  });
+
+  it("rejects non-objects and missing names", () => {
+    expect(parseCustomTemplate(null).ok).toBe(false);
+    expect(parseCustomTemplate("investor-update").ok).toBe(false);
+    expect(parseCustomTemplate({ ...validTemplate, name: "  " }).ok).toBe(false);
+    expect(parseCustomTemplate({ ...validTemplate, name: 42 }).ok).toBe(false);
+  });
+
+  it("rejects a missing or empty outline", () => {
+    expect(parseCustomTemplate({ ...validTemplate, outline: undefined }).ok).toBe(false);
+    expect(parseCustomTemplate({ ...validTemplate, outline: [] }).ok).toBe(false);
+  });
+
+  it("rejects an outline over the cap", () => {
+    const outline = Array.from({ length: TEMPLATE_LIMITS.outlineMax + 1 }, () => ({
+      layout: "content",
+      heading: "H",
+      hint: "",
+    }));
+    const result = parseCustomTemplate({ ...validTemplate, outline });
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects unknown layouts and missing headings", () => {
+    expect(
+      parseCustomTemplate({
+        ...validTemplate,
+        outline: [{ layout: "hero", heading: "H", hint: "" }],
+      }).ok
+    ).toBe(false);
+    expect(
+      parseCustomTemplate({
+        ...validTemplate,
+        outline: [{ layout: "content", heading: "", hint: "" }],
+      }).ok
+    ).toBe(false);
+  });
+
+  it("truncates overlong text instead of rejecting", () => {
+    const result = parseCustomTemplate({
+      ...validTemplate,
+      name: "n".repeat(TEMPLATE_LIMITS.name + 100),
+      outline: [
+        {
+          layout: "content",
+          heading: "h".repeat(TEMPLATE_LIMITS.heading + 100),
+          hint: "x".repeat(TEMPLATE_LIMITS.hint + 100),
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.name).toHaveLength(TEMPLATE_LIMITS.name);
+    expect(result.value.outline[0].heading).toHaveLength(TEMPLATE_LIMITS.heading);
+    expect(result.value.outline[0].hint).toHaveLength(TEMPLATE_LIMITS.hint);
+  });
+
+  it("degrades invalid team/audience to defaults (draft prompt never reads them)", () => {
+    const result = parseCustomTemplate({
+      ...validTemplate,
+      defaultTeam: "marketing",
+      defaultAudience: "everyone",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.defaultTeam).toBe("new-ventures");
+    expect(result.value.defaultAudience).toBe("internal");
+  });
+
+  it("derives targetLength from the outline, ignoring the claimed value", () => {
+    const result = parseCustomTemplate({ ...validTemplate, targetLength: 999 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.targetLength).toBe(2);
   });
 });

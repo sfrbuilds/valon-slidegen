@@ -1,17 +1,23 @@
 /**
- * Validate JSON responses from Gemini. Nothing from the model becomes
- * app state without passing through here.
+ * Validate untrusted JSON at the boundary: Gemini responses, plus the
+ * one client-supplied structure the server must trust-check (custom
+ * templates arriving in draft request bodies). Nothing from either
+ * source becomes app state or prompt input without passing through here.
  */
 
 import type {
+  Audience,
   ChartData,
   ChartType,
   EvalFinding,
   EvalVerdict,
   Slide,
   SlideLayout,
+  Team,
 } from "./types";
-import { CHART_TYPES, EVAL_VERDICTS, SLIDE_LAYOUTS, makeId } from "./types";
+import { AUDIENCES, CHART_TYPES, EVAL_VERDICTS, SLIDE_LAYOUTS, TEAMS, makeId } from "./types";
+import type { Template, TemplateOutlineSlide } from "./templates";
+import { TEMPLATE_LIMITS } from "./templates";
 
 export type ParseResult<T> =
   | { ok: true; value: T }
@@ -262,6 +268,78 @@ export function parseEvalResult(
         .slice(0, 6)
     : [];
   return { ok: true, value: { verdict, findings } };
+}
+
+/**
+ * Validate a custom template arriving in a draft request body. Custom
+ * templates live in the browser's localStorage, which the server cannot
+ * see, so the client ships the whole object and it gets the same
+ * trust-boundary treatment as model output. Structural problems reject
+ * (unknown layout, missing heading, oversized outline); overlong text
+ * degrades by truncation to TEMPLATE_LIMITS, because user-authored
+ * template text is injected into the draft prompt.
+ */
+export function parseCustomTemplate(raw: unknown): ParseResult<Template> {
+  if (typeof raw !== "object" || raw === null) {
+    return { ok: false, error: "Custom template is not an object." };
+  }
+  const t = raw as Record<string, unknown>;
+  const name =
+    typeof t.name === "string" ? t.name.trim().slice(0, TEMPLATE_LIMITS.name) : "";
+  if (!name) return { ok: false, error: "Custom template has no name." };
+  if (!Array.isArray(t.outline) || t.outline.length === 0) {
+    return { ok: false, error: "Custom template has no outline." };
+  }
+  if (t.outline.length > TEMPLATE_LIMITS.outlineMax) {
+    return {
+      ok: false,
+      error: `Custom template outline exceeds ${TEMPLATE_LIMITS.outlineMax} slides.`,
+    };
+  }
+  const outline: TemplateOutlineSlide[] = [];
+  for (let i = 0; i < t.outline.length; i++) {
+    const s = t.outline[i] as Record<string, unknown> | null;
+    if (typeof s !== "object" || s === null || !isSlideLayout(s.layout)) {
+      return { ok: false, error: `Outline slide ${i + 1} has an invalid layout.` };
+    }
+    const heading =
+      typeof s.heading === "string" && s.heading.trim()
+        ? s.heading.trim().slice(0, TEMPLATE_LIMITS.heading)
+        : "";
+    if (!heading) {
+      return { ok: false, error: `Outline slide ${i + 1} has no heading.` };
+    }
+    const hint =
+      typeof s.hint === "string" ? s.hint.trim().slice(0, TEMPLATE_LIMITS.hint) : "";
+    outline.push({ layout: s.layout, heading, hint });
+  }
+  // defaultTeam/defaultAudience are picker conveniences the draft prompt
+  // never reads (team/audience arrive separately on the request), so
+  // invalid values degrade to defaults rather than rejecting the draft.
+  const defaultTeam: Team =
+    typeof t.defaultTeam === "string" && (TEAMS as readonly string[]).includes(t.defaultTeam)
+      ? (t.defaultTeam as Team)
+      : "new-ventures";
+  const defaultAudience: Audience =
+    typeof t.defaultAudience === "string" &&
+    (AUDIENCES as readonly string[]).includes(t.defaultAudience)
+      ? (t.defaultAudience as Audience)
+      : "internal";
+  return {
+    ok: true,
+    value: {
+      id: typeof t.id === "string" && t.id.trim() ? t.id.trim().slice(0, 80) : "custom",
+      name,
+      description:
+        typeof t.description === "string"
+          ? t.description.trim().slice(0, TEMPLATE_LIMITS.description)
+          : "",
+      defaultTeam,
+      defaultAudience,
+      targetLength: outline.length,
+      outline,
+    },
+  };
 }
 
 /**

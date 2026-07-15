@@ -1,6 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { localStorageAdapter } from "../storage";
 import type { Deck } from "../types";
+import type { Template } from "../templates";
+
+function makeTemplate(id: string, overrides: Partial<Template> = {}): Template {
+  return {
+    id,
+    name: "Our review",
+    description: 'Saved from "Deck".',
+    defaultTeam: "gtm",
+    defaultAudience: "internal",
+    targetLength: 1,
+    outline: [{ layout: "content", heading: "Wins", hint: "3 tight bullets." }],
+    ...overrides,
+  };
+}
 
 function makeDeck(id: string, overrides: Partial<Deck> = {}): Deck {
   return {
@@ -91,5 +105,53 @@ describe("localStorageAdapter", () => {
     // erased the message.
     localStorageAdapter.saveDeck({ ...a, slides: result.slides });
     expect(localStorageAdapter.getDeck("d1")!.chatHistory).toHaveLength(0);
+  });
+});
+
+describe("localStorageAdapter custom templates", () => {
+  it("round-trips a template and lists alphabetically by name", () => {
+    stubLocalStorage();
+    expect(localStorageAdapter.saveTemplate(makeTemplate("custom_b", { name: "Zeta review" }))).toBe(true);
+    expect(localStorageAdapter.saveTemplate(makeTemplate("custom_a", { name: "Alpha review" }))).toBe(true);
+    const names = localStorageAdapter.getTemplates().map((t) => t.name);
+    expect(names).toEqual(["Alpha review", "Zeta review"]);
+  });
+
+  it("deletes a template by id", () => {
+    stubLocalStorage();
+    localStorageAdapter.saveTemplate(makeTemplate("custom_a"));
+    localStorageAdapter.deleteTemplate("custom_a");
+    expect(localStorageAdapter.getTemplates()).toHaveLength(0);
+  });
+
+  it("returns false instead of throwing when the quota is exceeded", () => {
+    stubLocalStorage({ failWrites: true });
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(localStorageAdapter.saveTemplate(makeTemplate("custom_a"))).toBe(false);
+    spy.mockRestore();
+  });
+
+  it("reads stores written before custom templates existed", () => {
+    const data = stubLocalStorage();
+    // A v1 store persisted by the pre-template app: no `templates` key.
+    data.set(
+      "valon-slidegen-v0",
+      JSON.stringify({ version: 1, decks: { d1: makeDeck("d1") } })
+    );
+    expect(localStorageAdapter.getTemplates()).toEqual([]);
+    expect(localStorageAdapter.getDeck("d1")?.id).toBe("d1");
+    // And writing a template does not disturb the existing decks.
+    expect(localStorageAdapter.saveTemplate(makeTemplate("custom_a"))).toBe(true);
+    expect(localStorageAdapter.getDeck("d1")?.id).toBe("d1");
+    expect(localStorageAdapter.getTemplates()).toHaveLength(1);
+  });
+
+  it("keeps decks and templates in separate namespaces", () => {
+    stubLocalStorage();
+    localStorageAdapter.saveDeck(makeDeck("x"));
+    localStorageAdapter.saveTemplate(makeTemplate("x"));
+    localStorageAdapter.deleteDeck("x");
+    expect(localStorageAdapter.getTemplates()).toHaveLength(1);
+    expect(localStorageAdapter.getDeck("x")).toBeNull();
   });
 });

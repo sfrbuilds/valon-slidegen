@@ -12,6 +12,7 @@ import { Chip } from "@/components/ui/Chip";
 import { StagedProgress } from "@/components/ui/StagedProgress";
 import { useStore } from "@/lib/store";
 import { slugify } from "@/lib/pptx-map";
+import { deriveTemplateFromDeck, TEMPLATE_LIMITS } from "@/lib/templates";
 import {
   makeId,
   nowIso,
@@ -47,7 +48,7 @@ import {
 export default function WorkspacePage() {
   const params = useParams<{ deckId: string }>();
   const router = useRouter();
-  const { getDeck, updateDeck, updateSlide, addChatMessage, removeChatMessage } = useStore();
+  const { getDeck, updateDeck, updateSlide, addChatMessage, removeChatMessage, saveTemplate } = useStore();
   const [deck, setDeck] = useState<Deck | null>(null);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
   const [chatScope, setChatScope] = useState<ChatScope>("slide");
@@ -58,6 +59,11 @@ export default function WorkspacePage() {
   const [evalRun, setEvalRun] = useState<EvalRun | null>(null);
   const [dragSourceIndex, setDragSourceIndex] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<{ index: number; position: "above" | "below" } | null>(null);
+  // "Save as template" inline name field (open state + draft name) and
+  // a transient confirmation on the button after a successful save.
+  const [tplNameOpen, setTplNameOpen] = useState(false);
+  const [tplName, setTplName] = useState("");
+  const [tplSaved, setTplSaved] = useState(false);
 
   useEffect(() => {
     const d = getDeck(params.deckId);
@@ -310,6 +316,34 @@ export default function WorkspacePage() {
     } finally {
       setBusy("idle");
     }
+  }
+
+  /**
+   * Snapshot the deck's structure as a reusable template. Pure client
+   * work: deriveTemplateFromDeck reads only presence and shape (never
+   * chart values or image payloads), and the result lands in
+   * localStorage next to the decks. The landing form picks it up.
+   */
+  function handleSaveTemplate() {
+    if (!deck || deck.slides.length === 0) return;
+    const name = tplName.trim();
+    if (!name) return;
+    const ok = saveTemplate(deriveTemplateFromDeck(deck, name));
+    setTplNameOpen(false);
+    setTplName("");
+    if (ok) {
+      setTplSaved(true);
+      window.setTimeout(() => setTplSaved(false), 2500);
+    } else {
+      setWarning(
+        "Could not save the template: browser storage is full. Delete old presentations and try again."
+      );
+    }
+  }
+
+  function closeTplName() {
+    setTplNameOpen(false);
+    setTplName("");
   }
 
   async function handleBrandCheck() {
@@ -620,7 +654,55 @@ export default function WorkspacePage() {
               }}
             />
           </div>
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          {/* flexWrap: four actions plus the inline name field can crowd
+              a laptop width; wrapping beats overflow. Export stays the
+              visually primary action; Save as template is a ghost. */}
+          <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {tplNameOpen ? (
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  value={tplName}
+                  onChange={(e) => setTplName(e.target.value)}
+                  maxLength={TEMPLATE_LIMITS.name}
+                  placeholder="Template name"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveTemplate();
+                    if (e.key === "Escape") closeTplName();
+                  }}
+                  style={{
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 13,
+                    padding: "9px 12px",
+                    width: 190,
+                    border: "1px solid var(--ink-300)",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--paper-white)",
+                    color: "var(--ink-900)",
+                    outline: "none",
+                  }}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={handleSaveTemplate}
+                  disabled={!tplName.trim()}
+                >
+                  Save
+                </Button>
+                <Button variant="ghost" onClick={closeTplName}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => setTplNameOpen(true)}
+                disabled={busy !== "idle" || deck.slides.length === 0}
+                title="Save this deck's structure (layouts, headings, content shape) as a reusable template on the landing page."
+              >
+                {tplSaved ? "Saved to your templates" : "Save as template"}
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={handleBrandCheck}

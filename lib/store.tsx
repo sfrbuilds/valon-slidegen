@@ -8,10 +8,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ChatMessage, Deck, Slide } from "./types";
 import { nowIso } from "./types";
+import type { Template } from "./templates";
 import { localStorageAdapter } from "./storage";
 
 type StoreContext = {
   decks: Deck[];
+  // Custom (user-saved) templates; built-ins live in lib/templates.ts.
+  templates: Template[];
+  saveTemplate: (template: Template) => boolean;
+  deleteTemplate: (id: string) => void;
   refresh: () => void;
   getDeck: (id: string) => Deck | null;
   saveDeck: (deck: Deck) => boolean;
@@ -33,9 +38,22 @@ const StoreCtx = createContext<StoreContext | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
   const refresh = useCallback(() => {
     setDecks(localStorageAdapter.getDecks());
+    setTemplates(localStorageAdapter.getTemplates());
+  }, []);
+
+  const saveTemplate = useCallback((template: Template) => {
+    const ok = localStorageAdapter.saveTemplate(template);
+    setTemplates(localStorageAdapter.getTemplates());
+    return ok;
+  }, []);
+
+  const deleteTemplate = useCallback((id: string) => {
+    localStorageAdapter.deleteTemplate(id);
+    setTemplates(localStorageAdapter.getTemplates());
   }, []);
 
   useEffect(() => {
@@ -107,7 +125,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <StoreCtx.Provider
-      value={{ decks, refresh, getDeck, saveDeck, deleteDeck, updateDeck, updateSlide, addChatMessage, removeChatMessage }}
+      value={{ decks, templates, saveTemplate, deleteTemplate, refresh, getDeck, saveDeck, deleteDeck, updateDeck, updateSlide, addChatMessage, removeChatMessage }}
     >
       {children}
     </StoreCtx.Provider>

@@ -1,20 +1,26 @@
 /**
- * Storage abstraction for decks. LocalStorage adapter for v0; swappable
- * for a real DB later without touching the app code.
+ * Storage abstraction for decks and custom templates. LocalStorage
+ * adapter for v0; swappable for a real DB later without touching the
+ * app code.
  *
  * Writes return a boolean: base64 images can push a deck past the
  * localStorage quota, and a silent failure would make persistence stop
  * working with no signal. Callers surface `false` to the user.
- * (IndexedDB is the clean long-term fix for image payloads.)
+ * (IndexedDB is the clean long-term fix for image payloads. Custom
+ * templates are tiny text blobs by construction and never carry images.)
  */
 
 import type { Deck } from "./types";
+import type { Template } from "./templates";
 
 export interface Storage {
   getDecks(): Deck[];
   getDeck(id: string): Deck | null;
   saveDeck(deck: Deck): boolean;
   deleteDeck(id: string): void;
+  getTemplates(): Template[];
+  saveTemplate(template: Template): boolean;
+  deleteTemplate(id: string): void;
 }
 
 const STORAGE_KEY = "valon-slidegen-v0";
@@ -22,20 +28,25 @@ const STORAGE_KEY = "valon-slidegen-v0";
 type StoredShape = {
   version: 1;
   decks: Record<string, Deck>;
+  templates: Record<string, Template>;
 };
 
 function readStore(): StoredShape {
-  if (typeof window === "undefined") return { version: 1, decks: {} };
+  if (typeof window === "undefined") return { version: 1, decks: {}, templates: {} };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { version: 1, decks: {} };
+    if (!raw) return { version: 1, decks: {}, templates: {} };
     const parsed = JSON.parse(raw) as StoredShape;
     if (parsed.version !== 1 || typeof parsed.decks !== "object") {
-      return { version: 1, decks: {} };
+      return { version: 1, decks: {}, templates: {} };
+    }
+    // Stores written before custom templates existed lack the field.
+    if (typeof parsed.templates !== "object" || parsed.templates === null) {
+      parsed.templates = {};
     }
     return parsed;
   } catch {
-    return { version: 1, decks: {} };
+    return { version: 1, decks: {}, templates: {} };
   }
 }
 
@@ -70,6 +81,22 @@ export const localStorageAdapter: Storage = {
   deleteDeck(id) {
     const store = readStore();
     delete store.decks[id];
+    writeStore(store);
+  },
+  getTemplates() {
+    const store = readStore();
+    return Object.values(store.templates).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  },
+  saveTemplate(template) {
+    const store = readStore();
+    store.templates[template.id] = template;
+    return writeStore(store);
+  },
+  deleteTemplate(id) {
+    const store = readStore();
+    delete store.templates[id];
     writeStore(store);
   },
 };

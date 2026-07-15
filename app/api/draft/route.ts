@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDraftPrompt } from "@/lib/prompts";
-import { parseDeckDraft, toSlide } from "@/lib/deck-schema";
+import { parseCustomTemplate, parseDeckDraft, toSlide } from "@/lib/deck-schema";
 import { detectsChartIntent, CHART_MISS_WARNING } from "@/lib/chart-intent";
 import { GEMINI_DRAFT_RESPONSE_SCHEMA } from "@/lib/response-schemas";
 import type { DraftDeckRequest, DraftDeckResponse } from "@/lib/types";
@@ -28,6 +28,18 @@ export async function POST(req: Request) {
     const body = (await req.json()) as DraftDeckRequest;
     const chartRequested = detectsChartIntent(body.brief);
 
+    // Custom templates arrive as full objects (localStorage is invisible
+    // to the server) and are validated like everything else untrusted.
+    // 400, not 502: this is bad client input, not unusable model output.
+    let customTemplate = null;
+    if (body.customTemplate != null) {
+      const tpl = parseCustomTemplate(body.customTemplate);
+      if (!tpl.ok) {
+        return NextResponse.json({ error: tpl.error }, { status: 400 });
+      }
+      customTemplate = tpl.value;
+    }
+
     const promptInput = {
       brief: body.brief,
       team: body.team,
@@ -35,6 +47,7 @@ export async function POST(req: Request) {
       targetLength: body.targetLength,
       contextDoc: body.contextDoc ?? null,
       templateId: body.templateId ?? null,
+      customTemplate,
     };
 
     let text = await generate(

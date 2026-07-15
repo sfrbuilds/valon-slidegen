@@ -6,7 +6,8 @@
  * shaped deck on the first draft.
  */
 
-import type { Audience, SlideLayout, Team } from "./types";
+import type { Audience, Deck, Slide, SlideLayout, Team } from "./types";
+import { makeId } from "./types";
 
 export type TemplateOutlineSlide = {
   layout: SlideLayout;
@@ -305,4 +306,81 @@ export function templateOutlineBlock(template: Template): string {
     `Produce roughly ${template.outline.length} slides. Match the template's slide count within +/- 2.`,
   ];
   return lines.join("\n");
+}
+
+// -------- Custom templates --------
+
+/**
+ * Caps for user-authored templates. Custom templates live in the
+ * browser's localStorage (invisible to the server), so they travel in
+ * the draft request body, and their text is injected into the draft
+ * prompt — every field is length-capped at the trust boundary, same
+ * reasoning as CONTEXT_DOC_CHAR_CAP.
+ */
+export const TEMPLATE_LIMITS = {
+  name: 80,
+  description: 200,
+  heading: 150,
+  hint: 400,
+  outlineMax: 20,
+} as const;
+
+/**
+ * Derive a reusable template from a finished deck. Pure structure
+ * extraction: reads only the presence and shape of slide content
+ * (bullet counts, chart type, series count, image presence), never
+ * values — no base64 image payloads and no chart numbers land in the
+ * template, so it stays a tiny text blob and last quarter's figures
+ * never steer next quarter's draft. Headings are copied verbatim:
+ * templateOutlineBlock already instructs the model to adapt the wording
+ * of each heading to the new brief while keeping ordering and intent.
+ */
+export function deriveTemplateFromDeck(deck: Deck, name: string): Template {
+  return {
+    id: makeId("custom"),
+    name: name.trim().slice(0, TEMPLATE_LIMITS.name),
+    description: `Saved from "${deck.title}".`.slice(0, TEMPLATE_LIMITS.description),
+    defaultTeam: deck.team,
+    defaultAudience: deck.audience,
+    targetLength: deck.slides.length,
+    outline: deck.slides.map((slide) => ({
+      layout: slide.layout,
+      heading: slide.heading.trim().slice(0, TEMPLATE_LIMITS.heading),
+      hint: deriveHint(slide).slice(0, TEMPLATE_LIMITS.hint),
+    })),
+  };
+}
+
+/**
+ * Assemble a hint from what the slide contains, in the register of the
+ * built-in hints: they tell the model what kind of content belongs in
+ * the slot, not what the content was.
+ */
+function deriveHint(slide: Slide): string {
+  const parts: string[] = [];
+  if (slide.layout === "title") parts.push("Deck cover.");
+  if (slide.layout === "section") parts.push("Divider slide.");
+  if (slide.subheading?.trim()) {
+    parts.push(
+      slide.layout === "section"
+        ? "Include one line of context."
+        : "Include a short subtitle."
+    );
+  }
+  if (slide.bullets.length > 0) {
+    parts.push(
+      `${slide.bullets.length} tight bullet${slide.bullets.length === 1 ? "" : "s"}.`
+    );
+  }
+  if (slide.chartData) {
+    const seriesCount = slide.chartData.series.length;
+    parts.push(
+      `Include chartData (${slide.chartData.type}${seriesCount > 1 ? `, ${seriesCount} series` : ""}). Set isDummyData true unless the brief provides real numbers.`
+    );
+  }
+  if (slide.imageIdea?.trim()) {
+    parts.push("Supporting editorial illustration.");
+  }
+  if (parts.length === 0) parts.push("Short, focused slide.");
+  return parts.join(" ");
 }

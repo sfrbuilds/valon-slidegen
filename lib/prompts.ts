@@ -21,7 +21,7 @@ import type {
 } from "./types";
 import { CONTEXT_DOC_CHAR_CAP } from "./types";
 import { getTone, toneBlock } from "./tones";
-import { templateById, templateOutlineBlock } from "./templates";
+import { templateById, templateOutlineBlock, type Template } from "./templates";
 
 // -------- Constants: identity, brand style, response shapes --------
 
@@ -211,10 +211,15 @@ export function buildDraftPrompt(input: {
   targetLength: number;
   contextDoc: ContextDoc | null;
   templateId?: string | null;
+  // A custom (user-saved) template, already validated by
+  // parseCustomTemplate at the route. Overrides the built-in id lookup:
+  // custom templates only exist in the browser, so the server receives
+  // the whole object instead of a resolvable id.
+  customTemplate?: Template | null;
   forceChart?: boolean;
 }): string {
   const tone = getTone(input.team, input.audience);
-  const template = templateById(input.templateId ?? null);
+  const template = input.customTemplate ?? templateById(input.templateId ?? null);
   const templateBlock = template ? templateOutlineBlock(template) : "";
   const lengthGuidance = template
     ? `Aim for ${template.outline.length} slides, matching the template structure. Adjust by no more than a slide or two.`

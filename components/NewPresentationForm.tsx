@@ -35,7 +35,7 @@ import { detectsChartIntent } from "@/lib/chart-intent";
 
 export function NewPresentationForm() {
   const router = useRouter();
-  const { saveDeck } = useStore();
+  const { saveDeck, templates: customTemplates, deleteTemplate } = useStore();
   const [brief, setBrief] = useState("");
   const [team, setTeam] = useState<Team>("new-ventures");
   const [audience, setAudience] = useState<Audience>("internal");
@@ -45,14 +45,20 @@ export function NewPresentationForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedTemplate = templateById(
-    templateId === BLANK_TEMPLATE_ID ? null : templateId
-  );
+  // Built-ins resolve from code; customs from the store. Same type, so
+  // the preview and length UI downstream don't care which kind it is.
+  const resolveTemplate = (id: string): Template | null =>
+    templateById(id === BLANK_TEMPLATE_ID ? null : id) ??
+    customTemplates.find((t) => t.id === id) ??
+    null;
+
+  const selectedTemplate = resolveTemplate(templateId);
+  const selectedIsCustom = customTemplates.some((t) => t.id === templateId);
   const tone = getTone(team, audience);
 
   function handleTemplateChange(nextId: string) {
     setTemplateId(nextId);
-    const tpl = templateById(nextId);
+    const tpl = resolveTemplate(nextId);
     if (tpl) {
       setTeam(tpl.defaultTeam);
       setAudience(tpl.defaultAudience);
@@ -109,6 +115,9 @@ export function NewPresentationForm() {
         targetLength,
         contextDoc,
         templateId: templateId === BLANK_TEMPLATE_ID ? null : templateId,
+        // Custom templates only exist in this browser's storage, so the
+        // server gets the whole outline, not just an id it cannot resolve.
+        customTemplate: selectedIsCustom ? selectedTemplate : null,
       };
       const res = await fetch("/api/draft", {
         method: "POST",
@@ -200,6 +209,19 @@ export function NewPresentationForm() {
                 active={templateId === tpl.id}
                 template={tpl}
                 onClick={() => handleTemplateChange(tpl.id)}
+              />
+            ))}
+            {customTemplates.map((tpl) => (
+              <TemplateTile
+                key={tpl.id}
+                active={templateId === tpl.id}
+                template={tpl}
+                custom
+                onClick={() => handleTemplateChange(tpl.id)}
+                onDelete={() => {
+                  if (templateId === tpl.id) handleTemplateChange(BLANK_TEMPLATE_ID);
+                  deleteTemplate(tpl.id);
+                }}
               />
             ))}
           </div>
@@ -500,12 +522,16 @@ function TemplateTile({
   template,
   name,
   description,
+  custom = false,
+  onDelete,
 }: {
   active: boolean;
   onClick: () => void;
   template?: Template;
   name?: string;
   description?: string;
+  custom?: boolean;
+  onDelete?: () => void;
 }) {
   const displayName = template?.name ?? name ?? "";
   const displayDescription = template?.description ?? description ?? "";
@@ -546,11 +572,51 @@ function TemplateTile({
         >
           {displayName}
         </span>
-        {template && (
-          <span className="mono" style={{ fontSize: 10, color: "var(--ink-500)" }}>
-            {template.outline.length} slides
-          </span>
-        )}
+        <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {custom && (
+            <span
+              className="mono"
+              style={{
+                fontSize: 9,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--accent-deep)",
+                background: "rgba(216, 154, 78, 0.14)",
+                border: "1px solid var(--accent-soft)",
+                borderRadius: 999,
+                padding: "1px 6px",
+              }}
+            >
+              Custom
+            </span>
+          )}
+          {template && (
+            <span className="mono" style={{ fontSize: 10, color: "var(--ink-500)" }}>
+              {template.outline.length} slides
+            </span>
+          )}
+          {/* Span, not button: the tile itself is already a button and
+              nested buttons are invalid HTML. */}
+          {onDelete && (
+            <span
+              role="button"
+              aria-label={`Delete template ${displayName}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              style={{
+                color: "var(--ink-500)",
+                fontSize: 14,
+                lineHeight: 1,
+                padding: "0 2px",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </span>
+          )}
+        </span>
       </div>
       <span
         style={{

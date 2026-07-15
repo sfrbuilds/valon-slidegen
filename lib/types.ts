@@ -6,6 +6,10 @@
  * before becoming values of these types.
  */
 
+// Type-only import: erased at compile time, so no runtime cycle with
+// templates.ts (which imports values from this module).
+import type { Template } from "./templates";
+
 // -------- Enums / string unions --------
 
 export const TEAMS = [
@@ -182,6 +186,10 @@ export type DraftDeckRequest = {
   targetLength: number;
   contextDoc: ContextDoc | null;
   templateId?: string | null;
+  // Custom (user-saved) templates live in the browser's localStorage,
+  // which the server cannot see, so the full outline travels in the
+  // body. Validated server-side by parseCustomTemplate before use.
+  customTemplate?: Template | null;
 };
 
 export type DraftDeckResponse = {
