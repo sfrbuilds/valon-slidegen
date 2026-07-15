@@ -1,123 +1,195 @@
 import { NextResponse } from "next/server";
-import pptxgen from "pptxgenjs";
+import PptxGenJS from "pptxgenjs";
+import { mapDeck, slugify } from "@/lib/pptx-map";
+import type { Deck } from "@/lib/types";
 
-type SlidePayload = {
-  name: string;
-  prompt: string;
-  note?: string;
-  imageData?: string;
-};
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
-export async function POST(request: Request) {
+/**
+ * Export a Deck to PPTX. Structured slide model: text goes into
+ * pptxgenjs text placeholders, images (if present) go into image
+ * placeholders as separate layers. Prompts, briefs, and context docs
+ * never touch this route: only the Deck itself.
+ */
+export async function POST(req: Request) {
   try {
-    const body = (await request.json()) as {
-      title?: string;
-      slides?: SlidePayload[];
-    };
-
-    if (!body.slides?.length) {
-      return NextResponse.json({ error: "No slides to export." }, { status: 400 });
+    const body = (await req.json()) as { deck: Deck };
+    if (!body.deck || !body.deck.title || !Array.isArray(body.deck.slides)) {
+      return NextResponse.json({ error: "Invalid deck payload." }, { status: 400 });
     }
 
-    const deck = new pptxgen();
-    deck.layout = "LAYOUT_WIDE";
-    deck.author = "Valon";
-    deck.company = "Valon";
-    deck.subject = "Valon Presentation Takehome export";
-    deck.title = body.title || "Valon Presentation Takehome export";
+    const mapped = mapDeck(body.deck);
+    const pptx = new PptxGenJS();
+    pptx.layout = "LAYOUT_WIDE";
+    pptx.title = mapped.title;
 
-    for (const slideData of body.slides) {
-      const slide = deck.addSlide();
-      slide.background = { color: "F4E7B8" };
+    for (const spec of mapped.slides) {
+      const slide = pptx.addSlide();
+      slide.background = { color: spec.background };
 
-      if (slideData.imageData) {
-        slide.addImage({
-          data: slideData.imageData,
-          x: 0,
-          y: 0,
-          w: 13.333,
-          h: 7.5
-        });
-      } else {
-        slide.addShape("rect", {
-          x: 0.7,
-          y: 1.1,
-          w: 11.9,
-          h: 4.9,
-          fill: { color: "FFF7DC" },
-          line: { color: "2B1E16", width: 1.5 }
-        });
-        slide.addText("No image on this slide yet.", {
-          x: 1.2,
-          y: 3.1,
-          w: 7.5,
-          h: 0.5,
-          fontFace: "Aptos",
-          fontSize: 24,
-          bold: true,
-          color: "2B1E16"
+      for (const t of spec.texts) {
+        slide.addText(t.text, {
+          x: t.x,
+          y: t.y,
+          w: t.w,
+          h: t.h,
+          fontFace: t.fontFace,
+          fontSize: t.fontSize,
+          color: t.color,
+          italic: t.italic,
+          bold: t.bold,
+          align: t.align,
+          bullet: "bullet" in t && t.bullet ? { indent: 15 } : false,
+          valign: "top",
         });
       }
 
-      slide.addText(slideData.name || "Untitled slide", {
-        x: 0.4,
-        y: 0.25,
-        w: 7.6,
-        h: 0.4,
-        fontFace: "Aptos Display",
-        fontSize: 18,
-        bold: true,
-        color: "141414",
-        margin: 0
-      });
+      if ("image" in spec && spec.image) {
+        // pptxgenjs accepts data: URIs directly. "cover" sizing crops to
+        // fill the frame instead of stretching the image into it.
+        slide.addImage({
+          data: spec.image.data,
+          x: spec.image.x,
+          y: spec.image.y,
+          w: spec.image.w,
+          h: spec.image.h,
+          sizing: {
+            type: "cover",
+            w: spec.image.w,
+            h: spec.image.h,
+          },
+        });
+      }
 
-      slide.addText(slideData.prompt || "", {
-        x: 0.4,
-        y: 6.95,
-        w: 8.3,
-        h: 0.3,
-        fontFace: "Aptos",
-        fontSize: 8,
-        color: "141414",
-        margin: 0
-      });
+      if ("chart" in spec && spec.chart) {
+        const cd = spec.chart.data;
+        // pptxgenjs chart series shape
+        const chartSeries = cd.series.map((s) => ({
+          name: s.name,
+          labels: cd.labels,
+          values: s.values,
+        }));
+        const chartType =
+          cd.type === "line" ? pptx.ChartType.line : pptx.ChartType.bar;
+        slide.addChart(chartType, chartSeries, {
+          x: spec.chart.x,
+          y: spec.chart.y,
+          w: spec.chart.w,
+          h: spec.chart.h,
+          barDir: cd.type === "bar" ? "col" : undefined,
+          showTitle: false,
+          showLegend: cd.series.length > 1,
+          legendPos: "b",
+          catAxisLabelFontFace: "Aptos",
+          catAxisLabelFontSize: 10,
+          catAxisLabelColor: "5A5148",
+          valAxisLabelFontFace: "Aptos",
+          valAxisLabelFontSize: 10,
+          valAxisLabelColor: "5A5148",
+          chartColors: ["141210", "D89A4E", "5A5148", "B8722E"],
+          catGridLine: { style: "none" },
+          valGridLine: { style: "solid", color: "E5E1DA", size: 0.5 },
+          // Value labels on top of each bar / above each line point
+          showValue: true,
+          dataLabelPosition: cd.type === "bar" ? "outEnd" : "t",
+          dataLabelColor: "141210",
+          dataLabelFontFace: "Aptos",
+          dataLabelFontSize: 9,
+          dataLabelFontBold: true,
+          // Y-axis unit label, mirroring the on-screen chart
+          ...(cd.yAxisLabel
+            ? {
+                showValAxisTitle: true,
+                valAxisTitle: cd.yAxisLabel,
+                valAxisTitleFontFace: "Aptos",
+                valAxisTitleFontSize: 10,
+                valAxisTitleColor: "5A5148",
+              }
+            : {}),
+        });
+        if (spec.chart.caption) {
+          slide.addText(spec.chart.caption.text, {
+            x: spec.chart.caption.x,
+            y: spec.chart.caption.y,
+            w: spec.chart.caption.w,
+            h: spec.chart.caption.h,
+            fontFace: "Aptos",
+            fontSize: 9,
+            italic: false,
+            color: spec.chart.caption.color,
+            align: "left",
+            valign: "middle",
+          });
+        }
+        if (spec.chart.dummyChip) {
+          slide.addText(spec.chart.dummyChip.text, {
+            x: spec.chart.dummyChip.x,
+            y: spec.chart.dummyChip.y,
+            w: spec.chart.dummyChip.w,
+            h: spec.chart.dummyChip.h,
+            fontFace: "Aptos",
+            fontSize: 9,
+            bold: true,
+            color: spec.chart.dummyChip.color,
+            fill: { color: spec.chart.dummyChip.fill },
+            align: "center",
+            valign: "middle",
+          });
+        }
+      }
 
-      slide.addText(slideData.note || "", {
-        x: 8.95,
-        y: 6.8,
-        w: 4,
-        h: 0.45,
-        fontFace: "Aptos",
-        fontSize: 8,
-        color: "2B1E16",
-        margin: 0,
-        align: "right"
+      // Gold delineation dash directly under the heading (content slides only)
+      if ("headingAccent" in spec && spec.headingAccent) {
+        slide.addShape("rect", {
+          x: spec.headingAccent.x,
+          y: spec.headingAccent.y,
+          w: spec.headingAccent.w,
+          h: spec.headingAccent.h,
+          fill: { color: spec.headingAccent.fill },
+          line: { color: spec.headingAccent.fill, width: 0 },
+        });
+      }
+
+      // Valon watermark bottom-right (content slides only)
+      if ("watermark" in spec && spec.watermark) {
+        slide.addText(spec.watermark.text, {
+          x: spec.watermark.x,
+          y: spec.watermark.y,
+          w: spec.watermark.w,
+          h: spec.watermark.h,
+          fontFace: spec.watermark.fontFace,
+          fontSize: spec.watermark.fontSize,
+          italic: spec.watermark.italic,
+          color: spec.watermark.color,
+          align: spec.watermark.align,
+          valign: "middle",
+        });
+      }
+
+      // Thin accent bar (Valon wordmark gold) at slide bottom
+      slide.addShape("rect", {
+        x: spec.accentBar.x,
+        y: spec.accentBar.y,
+        w: spec.accentBar.w,
+        h: spec.accentBar.h,
+        fill: { color: spec.accentBar.fill },
+        line: { color: spec.accentBar.fill, width: 0 },
       });
     }
 
-    const file = await deck.write({ outputType: "nodebuffer" });
-
-    let responseBody: BodyInit;
-
-    if (typeof file === "string" || file instanceof Blob || file instanceof ArrayBuffer) {
-      responseBody = file;
-    } else {
-      const arrayBuffer = new ArrayBuffer(file.byteLength);
-      new Uint8Array(arrayBuffer).set(file);
-      responseBody = arrayBuffer;
-    }
-
-    return new Response(responseBody, {
+    const buffer = (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
+    const filename = `${slugify(mapped.title)}.pptx`;
+    return new NextResponse(new Uint8Array(buffer), {
+      status: 200,
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "Content-Disposition": 'attachment; filename="valon-presentation-takehome-export.pptx"'
-      }
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Something went wrong while exporting.";
-
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
