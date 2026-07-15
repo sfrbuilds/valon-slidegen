@@ -1,60 +1,102 @@
-# valon-presentation-takehome
+# Valon SlideGen v0
 
-`valon-presentation-takehome` is a small, public starter project for a Valon take-home. It is intentionally a working starting point rather than a finished product: the app can create slides, call Google's image generation model for slide art, and export the result as a `.pptx`, but there is plenty of room to improve the product, UX, and overall quality.
+Internal Valon tool for drafting presentations through conversation. Users
+describe what they need, pick a team and audience, then iterate with Gemini
+in a chat-first interface while previewing the deck live. Export as editable
+PowerPoint.
 
-The expected workflow is simple:
+## Setup
 
-1. Fork this repo into your own GitHub account.
-2. Run it locally.
-3. Use your preferred AI-native workflow and your own judgment to evolve it.
-4. Share your fork back with us.
+```bash
+npm install
+cp .env.example .env.local
+# add your Gemini API key to .env.local
+npm run dev
+```
 
-## What the app does
+Open http://localhost:3000 (or pass `-p 3001` if 3000 is taken).
 
-- Keeps a tiny slide deck in local browser storage.
-- Shows a left-hand slide rail and a main slide canvas.
-- Lets you add and remove slides.
-- Sends prompts to Google's image model and places the returned image onto a slide.
-- Exports the current deck as a PowerPoint file.
+```bash
+npm run typecheck   # strict TypeScript, no emit
+npm test            # vitest unit tests on the pure lib/ layer
+```
 
-## Local setup
+## What the starter repo shipped, and what was fixed
 
-1. Install dependencies:
+The seed app worked, but three patterns undermined it. All three are removed
+in this fork (details and rationale in [DECISIONS.md](./DECISIONS.md)):
 
-   ```bash
-   npm install
-   ```
+1. A hidden `HOUSE_STYLE_APPENDIX` appended to every image prompt, forcing
+   Comic Sans / clip-art aesthetics into generated images.
+2. Slide export rendered each slide as one full-bleed image with the text
+   baked in: nothing was editable after export.
+3. A minimal slide data model that could not represent structure (layouts,
+   charts, speaker notes), so every downstream feature hit a ceiling.
 
-2. Copy the environment template:
+This fork replaces them with a structured slide model, prompts collected in
+one documented file (`lib/prompts.ts`, nothing hidden), and a PPTX export
+where every text box and chart is a native, editable object.
 
-   ```bash
-   cp .env.example .env.local
-   ```
+## Features
 
-3. Add a Google AI API key to `.env.local`:
+- **Draft from a brief**: team, audience, optional reference document
+  (PDF / DOCX / TXT / MD), optional template. Eight tone profiles, one per
+  team x audience pair, previewable at setup.
+- **Eight deck templates** with slide-by-slide outlines (Investor Update,
+  Board Read, GTM Pipeline Review, Product Launch Brief, New Ventures Pitch,
+  Quarterly Planning, Product Release Notes, Partner Pitch: New Vertical).
+  Outlines shape structure; the model writes the copy.
+- **Chat revision, slide or deck scope**: "This slide" revises the selected
+  slide; "Whole deck" sends the full deck for a coherent global edit.
+  Multi-turn history rides along so iterative asks keep context. Charts and
+  images can be added, changed, or removed conversationally.
+- **Native editable charts**: bar / line, single or multi-series, value
+  labels, y-axis titles, captions. Charts land editable in PowerPoint and
+  Google Slides. When the model fabricates numbers it must set
+  `isDummyData: true`, which renders a visible "Illustrative data" chip on
+  screen and in the export.
+- **Brand check on demand**: a reviewer pass that judges every slide against
+  the deck's tone rules and returns findings tied to slide numbers. On-demand
+  by design, so drafting stays fast. "Fix findings" runs one bounded repair
+  pass (smallest edit per finding, logged in chat) and re-checks once.
+- **Inline editing**: click any heading, subheading, or bullet on the slide.
+  Slide rail with add / delete / drag-to-reorder.
+- **Editorial images**: optional Gemini-generated illustrations, brand style
+  enforced by a documented style layer, never text baked into images.
+- **Export**: .pptx download plus an "Open in Google Slides" interop path.
 
-   ```bash
-   GOOGLE_API_KEY=your_key_here
-   GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
-   ```
+## Architecture
 
-   `GOOGLE_IMAGE_MODEL` is optional. The default is `gemini-3-pro-image-preview`.
+- Next.js 15 App Router, React 19, TypeScript strict mode.
+- Gemini for text drafting and image generation (`lib/gemini.ts`), with
+  `responseSchema` locking JSON shapes at the model level
+  (`lib/response-schemas.ts`).
+- Everything from the model passes `lib/deck-schema.ts` validation before
+  becoming app state. Nothing is trusted raw.
+- Chart intent detection (`lib/chart-intent.ts`) is a hint, not an enforcer:
+  narrow patterns, one retry with a forcing directive on a miss, then a
+  visible warning. A good draft is never discarded over a missing chart.
+- localStorage persistence behind a storage interface (`lib/storage.ts`)
+  for a future cloud swap.
+- PPTX export is a pure mapping (`lib/pptx-map.ts`) fed to pptxgenjs.
 
-4. Start the local dev server:
+## Key files
 
-   ```bash
-   npm run dev
-   ```
+- `lib/types.ts` — domain model
+- `lib/tones.ts` — 8 team x audience tone definitions
+- `lib/templates.ts` — 8 deck templates with slide-by-slide outlines
+- `lib/prompts.ts` — all Gemini prompts, documented
+- `lib/response-schemas.ts` — Gemini responseSchema definitions
+- `lib/chart-intent.ts` — chart intent and removal detection
+- `lib/deck-schema.ts` — JSON validation for AI outputs
+- `lib/pptx-map.ts` — deck-to-pptx mapping
+- `lib/brand.ts` — brand tokens (colors, fonts, spacing)
+- `lib/__tests__/` — unit tests for the pure lib layer
+- `app/api/draft|redraft|redraft-deck|image|eval|export` — API routes
 
-5. Open [http://localhost:3000](http://localhost:3000).
+## Product thesis
 
-## Notes
-
-- This app stores deck state in the browser. There is no database.
-- The Google API key is used only on the server route inside the app.
-- Hosting and deployment are out of scope for the exercise.
-- If you prefer to work with tools like Claude Code, Codex, Gemini CLI, or similar, do that in your own fork.
-
-## Suggested focus
-
-Treat this repo like a rough product seed. The goal is not to preserve the starter exactly as-is; it is to turn it into something stronger with better product sense, better interface decisions, and better implementation choices.
+Internal tool for any Valon team (New Ventures, GTM, Product & Engineering,
+Executive & Board) to draft decks for internal or external audiences.
+Conversation-first: after a one-time setup, everything is chat with a live
+slide preview. Iterate on slides individually or the whole deck.

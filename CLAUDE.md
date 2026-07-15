@@ -1,0 +1,47 @@
+# Claude Code instructions for valon-slidegen-v0
+
+## Project
+
+Next.js 15 App Router + React 19 + TypeScript strict. Gemini for app
+runtime (text + image). No DB, no auth: localStorage behind the interface
+in `lib/storage.ts`. Do not add hosting or deployment config; this app is
+localhost-only by design.
+
+## Hard rules
+
+- Every prompt sent to Gemini lives in `lib/prompts.ts`. Never concatenate
+  prompt fragments elsewhere, never hide instructions in other modules.
+- Every Gemini responseSchema lives in `lib/response-schemas.ts`.
+- Nothing from the model becomes app state without passing a parser in
+  `lib/deck-schema.ts`. If you add a model-returned field, add validation
+  and a test.
+- Fabricated chart numbers must carry `isDummyData: true`. The parser
+  defaults to true when the field is missing. Never weaken this.
+- The Anthropic API key is a dev-tool credential only. Never import an
+  Anthropic SDK into app code.
+- Never commit API keys. `.env.local` is gitignored; keep it that way.
+
+## Conventions
+
+- `lib/` stays pure and testable: no React, no fetch, no Next imports
+  (except `store.tsx`, the one React file there).
+- API routes are thin: parse request, build prompt, call Gemini, validate,
+  merge, respond. Business rules (merge semantics, intent detection) belong
+  in `lib/`.
+- Chart/visual intent detection: patterns must be word-bounded and narrow.
+  Test any new pattern against "paragraph", "raise the bar", and "mom"
+  before adding it. Detection is a hint that drives one retry, never a
+  hard failure.
+- Errors: 502 only for unusable model output. Degradable problems (missing
+  requested chart) return a `warning` string on a 200.
+- UI style: inline styles with CSS variables from `globals.css`. Warm
+  cream / espresso ink / single gold accent. No new dependencies for UI.
+
+## Checks
+
+```bash
+npm run typecheck
+npm test
+```
+
+Run both before considering any change done.
