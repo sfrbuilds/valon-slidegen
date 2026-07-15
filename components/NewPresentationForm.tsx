@@ -336,8 +336,9 @@ export function NewPresentationForm() {
               <Chip
                 active={targetLength === null}
                 onClick={() => setTargetLength(null)}
+                title="Freeform: no enforced slide count. The model follows any structure or count in your brief, otherwise picks what serves it best."
               >
-                Auto · follow the brief
+                Auto
               </Chip>
               {[1, 3, 5, 8, 10, 12, 15].map((n) => (
                 <Chip
