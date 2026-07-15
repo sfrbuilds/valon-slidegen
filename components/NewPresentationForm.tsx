@@ -243,7 +243,7 @@ export function NewPresentationForm() {
             marginBottom: 24,
           }}
         >
-          <div>
+          <div style={{ flexShrink: 0 }}>
             <label
               className="eyebrow"
               style={{ display: "block", marginBottom: 10 }}
@@ -263,25 +263,32 @@ export function NewPresentationForm() {
             </div>
           </div>
 
-          <div>
+          {/* minWidth 0 down the chain lets the tone line give way with
+              an ellipsis when the row gets tight, instead of wrapping the
+              whole audience group onto a new line. Without it, selecting
+              the team with the longest tone name (Product & Engineering)
+              reshuffled the layout. */}
+          <div style={{ flex: "0 1 auto", minWidth: 0 }}>
             <label
               className="eyebrow"
               style={{ display: "block", marginBottom: 10 }}
             >
               Audience
             </label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
               {AUDIENCES.map((a) => (
                 <Chip
                   key={a}
                   active={audience === a}
                   onClick={() => setAudience(a)}
+                  style={{ flexShrink: 0 }}
                 >
                   {AUDIENCE_LABELS[a]}
                 </Chip>
               ))}
               <HoverCard
                 inline
+                style={{ minWidth: 0, flex: "0 1 auto" }}
                 trigger={
                 <span
                   className="body-sm"
@@ -289,12 +296,21 @@ export function NewPresentationForm() {
                     color: "var(--ink-500)",
                     borderBottom: "1px dotted var(--ink-300)",
                     cursor: "help",
+                    display: "block",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   Tone: {tone.name}
                 </span>
               }
             >
+              {/* Name the tone in the card: the inline trigger may be
+                  truncated when the row is tight. */}
+              <div className="eyebrow" style={{ marginBottom: 8, fontSize: 10 }}>
+                {tone.name}
+              </div>
               <div className="body-sm" style={{ marginBottom: 10, color: "var(--ink-700)" }}>
                 {tone.description}
               </div>
@@ -487,12 +503,16 @@ function HoverCard({
   children,
   width = 420,
   inline = false,
+  style,
 }: {
   trigger: React.ReactNode;
   children: React.ReactNode;
   width?: number;
   // inline: trigger is a text span; block: trigger fills its grid cell.
   inline?: boolean;
+  // Merged onto the wrapper, e.g. minWidth 0 so a flex parent can shrink
+  // the trigger (ellipsis) instead of wrapping the row.
+  style?: React.CSSProperties;
 }) {
   const [open, setOpen] = useState(false);
   const timer = useRef<number | null>(null);
@@ -514,6 +534,7 @@ function HoverCard({
         position: "relative",
         display: inline ? "inline-block" : "block",
         height: inline ? undefined : "100%",
+        ...style,
       }}
     >
       {trigger}
