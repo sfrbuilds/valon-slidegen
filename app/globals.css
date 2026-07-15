@@ -1,318 +1,161 @@
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
+
 :root {
-  --bg: #efe3b9;
-  --paper: #fff6df;
-  --ink: #1f160f;
-  --accent: #cc6035;
-  --accent-2: #3f7f92;
-  --edge: #2a1a11;
+  /* Brand tokens (from lib/brand.ts, mirrored) */
+  --paper-white: #ffffff;
+  --paper-warm-1: #f6f1ea;
+  --paper-warm-2: #f3e9dd;
+  --paper-warm-3: #f1e1d0;
+  --ink-900: #141210;
+  --ink-700: #2b241d;
+  --ink-500: #5a5148;
+  --ink-300: #9b948b;
+  --ink-100: #e5e1da;
+  --accent: #d89a4e;
+  --accent-deep: #b8722e;
+  --accent-soft: #e4b180;
+  --success: #3a6b4b;
+  --warning: #c88b2c;
+  --error: #9c3e3e;
+  --info: #3b4a5a;
+
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Geist Mono", "SF Mono", Menlo, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(20, 18, 16, 0.06);
+  --shadow-md: 0 4px 12px rgba(20, 18, 16, 0.08);
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body {
-  margin: 0;
-  min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 28%),
-    linear-gradient(135deg, #efe6bc 0%, #d8d5c2 45%, #e4c7b7 100%);
-  color: var(--ink);
-  font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", cursive;
+  height: 100%;
+  background: var(--paper-warm-1);
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.shell {
-  display: grid;
-  grid-template-columns: 280px 1fr;
+body {
   min-height: 100vh;
 }
 
-.sidebar {
-  padding: 18px;
-  border-right: 6px dotted rgba(31, 22, 15, 0.42);
-  background: rgba(255, 246, 223, 0.9);
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-.sidebar-top {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 16px;
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
 }
 
-.sidebar h1 {
-  margin: 0;
-  font-size: 2rem;
-  line-height: 0.95;
-  color: #a81457;
-  text-shadow: 2px 2px 0 #fff;
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.serif {
+  font-family: var(--font-serif);
+}
+.sans {
+  font-family: var(--font-sans);
+}
+.mono {
+  font-family: var(--font-mono);
+}
+.italic {
+  font-style: italic;
+}
+
+/* Utility classes used across pages */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 40px;
+}
+
+/* Display type is a confident sans: this is an automation platform for
+   regulated industries, not an editorial magazine. The serif italic
+   survives only in the Valon wordmark itself. */
+.h-display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+}
+
+.h-large {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink-900);
+}
+
+.h-medium {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
 }
 
 .eyebrow {
-  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.72rem;
-  opacity: 0.72;
+  color: var(--ink-500);
 }
 
-.slide-list {
-  display: grid;
-  gap: 12px;
+.body-lg {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink-700);
 }
 
-.thumb {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  border: 2px solid rgba(42, 26, 17, 0.12);
-  background: rgba(255, 255, 255, 0.45);
-  text-align: left;
-  border-radius: 4px 24px 10px 18px;
-  transform: rotate(-1.4deg);
+.body-md {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-700);
 }
 
-.thumb:nth-child(even) {
-  transform: rotate(1.2deg);
-}
-
-.thumb.active {
-  border-color: var(--edge);
-  box-shadow: 0 12px 32px rgba(31, 22, 15, 0.12);
-}
-
-.thumb-art {
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 2px dashed rgba(42, 26, 17, 0.24);
-  background: #f9efcc;
-  display: grid;
-  place-items: center;
-  color: rgba(31, 22, 15, 0.6);
-}
-
-.thumb-art img,
-.slide-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.thumb-copy {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 0.8rem;
-}
-
-.thumb-copy span {
-  text-transform: lowercase;
-  opacity: 0.72;
-}
-
-.editor {
-  display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  gap: 18px;
-  padding: 20px 24px 24px;
-}
-
-.top-strip {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.top-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.name-input,
-textarea {
-  width: 100%;
-  border: 3px solid rgba(42, 26, 17, 0.24);
-  border-radius: 3px;
-  background: rgba(255, 248, 228, 0.92);
-  color: var(--ink);
-  padding: 14px 16px;
-  outline: none;
-}
-
-.name-input {
-  min-width: min(460px, 50vw);
-  font-size: 1.15rem;
-}
-
-.canvas-wrap {
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.canvas-card {
-  width: min(100%, 980px);
-  aspect-ratio: 16 / 9;
-  border: 8px ridge rgba(42, 26, 17, 0.35);
-  border-radius: 0;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
-    var(--paper);
-  overflow: hidden;
-  box-shadow: 18px 18px 0 rgba(31, 22, 15, 0.2);
-}
-
-.empty-state {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 10px;
-  text-align: center;
-  padding: 32px;
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 1.7rem;
-  font-weight: 700;
-}
-
-.empty-state span {
-  max-width: 340px;
-  opacity: 0.72;
-}
-
-.floating-chip {
-  position: absolute;
-  top: 18px;
-  right: 24px;
-  display: grid;
-  gap: 4px;
-  padding: 10px 14px;
-  border-radius: 18px 18px 4px 18px;
-  background: rgba(31, 22, 15, 0.8);
-  color: #fff7df;
-  font-size: 0.82rem;
-  max-width: 280px;
-}
-
-.bottom-mess {
-  display: grid;
-  grid-template-columns: 1.3fr 280px;
-  gap: 16px;
-  align-items: start;
-}
-
-.prompt-card,
-.side-controls {
-  padding: 16px;
-  border-radius: 0;
-  background: rgba(255, 251, 239, 0.92);
-  border: 4px dashed rgba(42, 26, 17, 0.24);
-}
-
-.side-controls {
-  display: grid;
-  gap: 10px;
-  margin-top: 28px;
-}
-
-.field-label {
-  display: block;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-  opacity: 0.7;
-}
-
-.loud-button,
-.ghost-button {
-  border-radius: 2px;
-  padding: 12px 16px;
-  border: 3px solid var(--edge);
-  transition: transform 120ms ease, opacity 120ms ease;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.loud-button {
-  background: #ff4f9f;
-  color: white;
-}
-
-.ghost-button {
-  background: #fff34f;
-  color: var(--ink);
-}
-
-.loud-button:hover,
-.ghost-button:hover {
-  transform: translateY(-1px);
-}
-
-.loud-button:disabled,
-.ghost-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-  transform: none;
-}
-
-.status-bar {
-  min-height: 24px;
-  font-size: 1.02rem;
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.6);
-  padding: 8px 12px;
-  border-left: 8px solid #ff4f9f;
-}
-
-.weird-button {
-  transform: rotate(-3deg);
-}
-
-@media (max-width: 1024px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    border-right: 0;
-    border-bottom: 3px solid rgba(31, 22, 15, 0.22);
-  }
-
-  .bottom-mess {
-    grid-template-columns: 1fr;
-  }
-
-  .side-controls {
-    margin-top: 0;
-  }
-
-  .top-strip {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .name-input {
-    min-width: 0;
-  }
+.body-sm {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-500);
 }

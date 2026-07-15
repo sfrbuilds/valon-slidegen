@@ -1,19 +1,22 @@
-import type { Metadata } from "next";
 import "./globals.css";
+import type { Metadata } from "next";
+import { StoreProvider } from "@/lib/store";
 
 export const metadata: Metadata = {
-  title: "Valon Presentation Takehome",
-  description: "A rough starter for building image-first slides."
+  title: "Valon SlideGen",
+  description: "AI slide drafts and briefings, on brand.",
 };
 
 export default function RootLayout({
-  children
-}: Readonly<{
+  children,
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <StoreProvider>{children}</StoreProvider>
+      </body>
     </html>
   );
 }
