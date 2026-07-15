@@ -231,19 +231,21 @@ export function NewPresentationForm() {
           </div>
         </div>
 
-        {/* Team + audience share a row: four chips plus two leave plenty
-            of width, and the tone line tucks beneath as a footnote to
-            both. Target length gets its own row below. */}
+        {/* Team + audience share one row. Grid, not wrapping flex: a
+            wrapping flex container places items by their UNSHRUNK size,
+            so the tone line never got to truncate — the row just wrapped
+            (visibly, when selecting the team with the longest tone name).
+            Grid's minmax(0, 1fr) forces the audience cell to stay in row
+            and lets the tone text ellipsize instead. */}
         <div
           style={{
-            display: "flex",
-            gap: 48,
-            rowGap: 24,
-            flexWrap: "wrap",
+            display: "grid",
+            gridTemplateColumns: "auto minmax(0, 1fr)",
+            columnGap: 48,
             marginBottom: 24,
           }}
         >
-          <div style={{ flexShrink: 0 }}>
+          <div>
             <label
               className="eyebrow"
               style={{ display: "block", marginBottom: 10 }}
@@ -263,19 +265,16 @@ export function NewPresentationForm() {
             </div>
           </div>
 
-          {/* minWidth 0 down the chain lets the tone line give way with
-              an ellipsis when the row gets tight, instead of wrapping the
-              whole audience group onto a new line. Without it, selecting
-              the team with the longest tone name (Product & Engineering)
-              reshuffled the layout. */}
-          <div style={{ flex: "0 1 auto", minWidth: 0 }}>
+          <div style={{ minWidth: 0 }}>
             <label
               className="eyebrow"
               style={{ display: "block", marginBottom: 10 }}
             >
               Audience
             </label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+            {/* flexWrap here is the narrow-window fallback: the tone line
+                drops below the chips instead of clipping. */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0, flexWrap: "wrap" }}>
               {AUDIENCES.map((a) => (
                 <Chip
                   key={a}
