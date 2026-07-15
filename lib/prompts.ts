@@ -208,7 +208,10 @@ export function buildDraftPrompt(input: {
   brief: string;
   team: Team;
   audience: Audience;
-  targetLength: number;
+  // null = freeform: the model sizes the deck from the brief. Users who
+  // structure the brief themselves ("6 slides: slide 1..., slide 2...")
+  // must never have that concept bulldozed by a forced count.
+  targetLength: number | null;
   contextDoc: ContextDoc | null;
   templateId?: string | null;
   // A custom (user-saved) template, already validated by
@@ -223,13 +226,17 @@ export function buildDraftPrompt(input: {
   const templateBlock = template ? templateOutlineBlock(template) : "";
   const lengthGuidance = template
     ? `Aim for ${template.outline.length} slides, matching the template structure. Adjust by no more than a slide or two.`
-    : `Produce exactly ${input.targetLength} slides.`;
+    : input.targetLength !== null
+      ? `Produce exactly ${input.targetLength} slides.`
+      : "Choose the slide count that best serves the brief. If the brief specifies a number of slides or a slide-by-slide structure, follow it exactly. Otherwise favor a tight deck over a padded one.";
   return [
     IDENTITY_LINE,
     "",
     template
       ? `Draft a "${template.name}" deck for the ${input.team} team, ${input.audience} audience.`
-      : `Draft a complete ${input.targetLength}-slide presentation for the ${input.team} team, ${input.audience} audience.`,
+      : input.targetLength !== null
+        ? `Draft a complete ${input.targetLength}-slide presentation for the ${input.team} team, ${input.audience} audience.`
+        : `Draft a complete presentation for the ${input.team} team, ${input.audience} audience.`,
     "",
     "Brief:",
     input.brief,

@@ -39,7 +39,10 @@ export function NewPresentationForm() {
   const [brief, setBrief] = useState("");
   const [team, setTeam] = useState<Team>("new-ventures");
   const [audience, setAudience] = useState<Audience>("internal");
-  const [targetLength, setTargetLength] = useState(8);
+  // null = Auto: the deck is sized by the brief. A user who writes
+  // "6 slides: slide 1..., slide 2..." should never have that concept
+  // bulldozed by a forced count; explicit counts are opt-in.
+  const [targetLength, setTargetLength] = useState<number | null>(null);
   const [contextDoc, setContextDoc] = useState<ContextDoc | null>(null);
   const [templateId, setTemplateId] = useState<string>(BLANK_TEMPLATE_ID);
   const [loading, setLoading] = useState(false);
@@ -135,7 +138,8 @@ export function NewPresentationForm() {
         team,
         audience,
         brief: brief.trim(),
-        targetLength,
+        // Auto mode has no requested count; record what was drafted.
+        targetLength: targetLength ?? data.slides.length,
         contextDoc,
         templateId: templateId === BLANK_TEMPLATE_ID ? null : templateId,
         slides: data.slides,
@@ -328,7 +332,13 @@ export function NewPresentationForm() {
               custom length.
             </div>
           ) : (
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Chip
+                active={targetLength === null}
+                onClick={() => setTargetLength(null)}
+              >
+                Auto · follow the brief
+              </Chip>
               {[1, 3, 5, 8, 10, 12, 15].map((n) => (
                 <Chip
                   key={n}
@@ -433,7 +443,9 @@ export function NewPresentationForm() {
                   `Applying the ${tone.name} tone`,
                   selectedTemplate
                     ? `Laying out the ${selectedTemplate.name} structure (${selectedTemplate.outline.length} slides)`
-                    : `Laying out ${targetLength} slide${targetLength === 1 ? "" : "s"}`,
+                    : targetLength === null
+                      ? "Sizing the deck from your brief"
+                      : `Laying out ${targetLength} slide${targetLength === 1 ? "" : "s"}`,
                   ...(detectsChartIntent(brief) ? ["Building chart data"] : []),
                   "Writing slide copy",
                   "Polishing headings",

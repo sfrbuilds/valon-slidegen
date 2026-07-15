@@ -116,6 +116,14 @@ numbers and decisions; "GTM external" bans internal acronyms and false
 urgency. Each pair carries its own avoid-list. The full rules render at
 setup, so the system is visible product surface, not hidden prompt text.
 
+**Deck length follows the brief by default.** The form originally forced
+a slide count, which bulldozed users who had already structured the deck
+in the brief ("6 slides: slide 1 this, slide 2 that") — the forced
+"produce exactly 8" won over their concept. Default is now Auto: the
+model sizes the deck from the brief and must follow any stated count or
+slide-by-slide structure exactly. Explicit counts remain as opt-in chips,
+and templates still set their own length.
+
 **Templates as scaffolds.** Each template is a slide-by-slide outline
 (layout, heading, hint) injected into the draft prompt. The model writes
 copy; the template shapes structure. Floor of first-draft quality goes up

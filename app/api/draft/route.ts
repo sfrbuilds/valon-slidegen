@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       brief: body.brief,
       team: body.team,
       audience: body.audience,
-      targetLength: body.targetLength,
+      targetLength: body.targetLength ?? null,
       contextDoc: body.contextDoc ?? null,
       templateId: body.templateId ?? null,
       customTemplate,

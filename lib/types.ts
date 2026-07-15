@@ -183,7 +183,8 @@ export type DraftDeckRequest = {
   brief: string;
   team: Team;
   audience: Audience;
-  targetLength: number;
+  // null = freeform: the model sizes the deck from the brief.
+  targetLength: number | null;
   contextDoc: ContextDoc | null;
   templateId?: string | null;
   // Custom (user-saved) templates live in the browser's localStorage,
