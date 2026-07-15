@@ -73,7 +73,7 @@ export default function AboutPage() {
               text: "Eight writing profiles, one per team and audience pair. A board read and a customer pitch follow different rules; hover the tone line to see them.",
             },
             {
-              name: "Brand check",
+              name: "Review",
               text: "One click reviews every slide against the writing rules and quotes anything off. A second click applies the smallest fix for each finding.",
             },
           ]}
@@ -121,7 +121,7 @@ export default function AboutPage() {
           actuals before the presentation goes anywhere real.
         </p>
         <p>
-          The brand check is a reviewer, not an approver: it catches tone
+          Review is a second reader, not an approver: it catches tone
           violations, it does not verify facts. You remain the editor of
           record for anything you send.
         </p>

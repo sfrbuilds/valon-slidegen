@@ -55,7 +55,7 @@ where every text box and chart is a native, editable object.
   Google Slides. When the model fabricates numbers it must set
   `isDummyData: true`, which renders a visible "Illustrative data" chip on
   screen and in the export.
-- **Brand check on demand**: a reviewer pass that judges every slide against
+- **Review on demand**: a reviewer pass that judges every slide against
   the deck's tone rules and returns findings tied to slide numbers. On-demand
   by design, so drafting stays fast. "Fix findings" runs one bounded repair
   pass (smallest edit per finding, logged in chat) and re-checks once.
@@ -100,3 +100,14 @@ Internal tool for any Valon team (New Ventures, GTM, Product & Engineering,
 Executive & Board) to draft decks for internal or external audiences.
 Conversation-first: after a one-time setup, everything is chat with a live
 slide preview. Iterate on slides individually or the whole deck.
+
+Designed around concrete recurring jobs: a GTM/growth person building a
+quarterly pipeline review (hence first-class charts), a Chief of Staff
+preparing a board read or investor update (hence the Executive & Board
+tone and the "Illustrative data" guard), Product & Engineering writing a
+launch brief or release notes, New Ventures pitching a partner. Team x
+audience and template selection change the prompts, so the same brief
+produces a different deck for each job. Light edits — inline text, slide
+reorder, chat revision — happen in-app so export is the last step, not
+the start of a second editing pass. Full rationale in
+[DECISIONS.md](./DECISIONS.md).

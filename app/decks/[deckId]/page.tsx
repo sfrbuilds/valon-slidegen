@@ -228,7 +228,7 @@ export default function WorkspacePage() {
     const userMsg: ChatMessage = {
       id: makeId("msg"),
       role: "user",
-      content: `Fix ${evalRun.findings.length} brand check finding${evalRun.findings.length === 1 ? "" : "s"}`,
+      content: `Fix ${evalRun.findings.length} review finding${evalRun.findings.length === 1 ? "" : "s"}`,
       timestamp: nowIso(),
       scope: "deck",
     };
@@ -299,7 +299,7 @@ export default function WorkspacePage() {
         // Fixes landed; only the re-check failed. Keep the deck, say so.
         setEvalRun(null);
         setWarning(
-          "Fixes were applied, but the re-check failed. Run Brand check again to verify."
+          "Fixes were applied, but the re-check failed. Run Review again to verify."
         );
       }
     } catch (e) {
@@ -336,7 +336,7 @@ export default function WorkspacePage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Brand check failed (${res.status})`);
+        throw new Error(err.error || `Review failed (${res.status})`);
       }
       const data = (await res.json()) as EvalResponse;
       setEvalRun(data.evalRun);
@@ -627,7 +627,7 @@ export default function WorkspacePage() {
               disabled={busy !== "idle"}
               title="Reviews every slide against this deck's tone rules and flags off-brand copy."
             >
-              {busy === "eval" ? "Checking..." : "Brand check"}
+              {busy === "eval" ? "Reviewing..." : "Review"}
             </Button>
             <Button
               variant="secondary"
@@ -668,7 +668,7 @@ export default function WorkspacePage() {
             }}
           >
             <div className="eyebrow" style={{ marginBottom: 10, fontSize: 10 }}>
-              {busy === "fix" ? "Fixing findings" : "Brand check"}
+              {busy === "fix" ? "Fixing findings" : "Review"}
             </div>
             <StagedProgress
               stages={
@@ -676,7 +676,7 @@ export default function WorkspacePage() {
                   ? [
                       "Applying the smallest edit for each finding",
                       "Rewriting flagged copy in tone",
-                      "Re-running the brand check",
+                      "Re-running the review",
                     ]
                   : [
                       `Reading all ${deck.slides.length} slides`,
@@ -1020,7 +1020,7 @@ function EvalPanel({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span className="eyebrow" style={{ fontSize: 10 }}>
-            Brand check
+            Review
           </span>
           <span
             style={{
@@ -1053,7 +1053,7 @@ function EvalPanel({
         </div>
         <button
           onClick={onDismiss}
-          aria-label="Dismiss brand check"
+          aria-label="Dismiss review"
           style={{
             border: "none",
             background: "transparent",

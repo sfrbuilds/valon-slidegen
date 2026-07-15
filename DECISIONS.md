@@ -3,6 +3,54 @@
 What was found in the starter repo, what was built, what was deliberately
 not built, and why. Written to be read alongside the code.
 
+## What this is, and who it is for
+
+Valon SlideGen drafts presentation decks through conversation: describe
+the deck, pick team and audience, iterate in chat against a live preview,
+export as editable PowerPoint or Google Slides.
+
+**Designed from jobs to be done, not a feature list.** The product starts
+from concrete recurring deck jobs inside Valon, and each job shaped a
+specific decision:
+
+- A GTM or growth person preparing a **quarterly pipeline review** — the
+  "GTM Pipeline Review" template, and the reason chart generation is a
+  first-class primitive rather than an afterthought: a pipeline review
+  without charts is not a deliverable.
+- A Chief of Staff assembling a **board read or investor update** — the
+  "Board Read" and "Investor Update" templates, the Executive & Board
+  tone (leads with numbers and decisions), and the `isDummyData` guard,
+  because a fabricated figure in that deck is the worst possible failure.
+- Product & Engineering shipping a **launch brief or release notes** —
+  "Product Launch Brief", "Product Release Notes".
+- New Ventures **pitching internally or to a partner** — "New Ventures
+  Pitch", "Partner Pitch: New Vertical".
+
+The eight templates encode the decks that actually recur on Valon's
+leadership cadence.
+
+**Output changes with who is presenting and to whom.** Team x audience
+selects one of eight tone profiles (`lib/tones.ts`) whose rules and
+avoid-lists are injected into every drafting and revision prompt; the
+chosen template (`lib/templates.ts`) injects a slide-by-slide structural
+outline. The same brief produces a materially different deck for GTM
+external than for Executive & Board internal — by design, not by prompt
+luck. Details in "Eight tones, not three voices" and "Templates as
+scaffolds" below.
+
+**Charts and images are core, not garnish.** Quarterly reviews and
+investor updates are chart-driven documents, so charts are a typed
+primitive in the domain model, survive export as native editable objects,
+and get their own intent detection and honesty labeling. Generated images
+are the inverse: editorial, optional, and never load-bearing.
+
+**Light edits happen in-app, before export.** The exported file should
+not be the first place a user can fix a word. Inline text editing on the
+slide, a rail with add / delete / drag-to-reorder, and chat revision at
+slide or deck scope mean the deck leaves the app presentation-ready —
+export is the last step, not the start of a second editing job in
+PowerPoint.
+
 ## Found in the starter repo
 
 **1. Hidden image-prompt appendix.** The image generation path silently
@@ -73,7 +121,9 @@ setup, so the system is visible product surface, not hidden prompt text.
 copy; the template shapes structure. Floor of first-draft quality goes up
 without decks feeling stamped from a mold.
 
-**Brand check on demand, not in the loop.** An automatic eval pass on every
+**Review on demand, not in the loop.** (User-facing name "Review"; the
+internal name is eval — the `/api/eval` route and `EvalRun` types keep
+it.) An automatic eval pass on every
 draft adds latency and a second failure mode to the critical path. As a
 button, it costs nothing until asked, and findings quote the offending copy
 with slide numbers that jump to the slide. "Fix findings" closes the loop

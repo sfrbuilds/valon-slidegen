@@ -2,6 +2,10 @@
 
 ## Project
 
+Valon SlideGen: internal tool that drafts presentation decks through
+chat (pick team + audience + template, iterate against a live preview,
+export editable PPTX / Google Slides).
+
 Next.js 15 App Router + React 19 + TypeScript strict. Gemini for app
 runtime (text + image). No DB, no auth: localStorage behind the interface
 in `lib/storage.ts`. Do not add hosting or deployment config; this app is

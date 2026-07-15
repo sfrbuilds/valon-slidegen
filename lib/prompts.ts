@@ -355,7 +355,7 @@ export function buildEvalPrompt(input: {
     })
     .join("\n");
   return [
-    "You are Valon's brand reviewer. Judge whether this drafted deck follows the required tone. Be specific and strict; vague praise helps no one.",
+    "You are Valon's brand reviewer. Judge whether this drafted deck follows the required tone. Flag only clear, material violations of the tone rules; do not flag reasonable stylistic choices that a competent writer could defend. Be specific; vague praise helps no one.",
     "",
     `Deck: "${input.deck.title}" (team: ${input.deck.team}, audience: ${input.deck.audience}).`,
     `Brief: ${input.deck.brief}`,
