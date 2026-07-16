@@ -598,6 +598,67 @@ function TemplateTile({
         transition: "border-color 120ms ease, background 120ms ease",
       }}
     >
+      {/* Custom tiles get a dedicated meta row (tag, count, delete) with
+          the name on its own full-width line below. User-authored names
+          can be long unbroken tokens ("release_preview_internal"): if the
+          name shares a flex row with the metadata, overflowWrap lets the
+          browser shrink it to near-zero width and shred it across four
+          lines. On its own line the name has the whole tile, wraps at
+          most once, and the metadata never moves. */}
+      {custom && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          <span
+            className="mono"
+            style={{
+              fontSize: 9,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--accent-deep)",
+              background: "rgba(216, 154, 78, 0.14)",
+              border: "1px solid var(--accent-soft)",
+              borderRadius: 999,
+              padding: "1px 6px",
+            }}
+          >
+            Custom
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {template && (
+              <span className="mono" style={{ fontSize: 10, color: "var(--ink-500)" }}>
+                {template.outline.length} slides
+              </span>
+            )}
+            {/* Span, not button: the tile itself is already a button and
+                nested buttons are invalid HTML. */}
+            {onDelete && (
+              <span
+                role="button"
+                aria-label={`Delete template ${displayName}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                style={{
+                  color: "var(--ink-500)",
+                  fontSize: 14,
+                  lineHeight: 1,
+                  padding: "0 2px",
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </span>
+            )}
+          </span>
+        </div>
+      )}
       <div
         style={{
           display: "flex",
@@ -606,10 +667,6 @@ function TemplateTile({
           gap: 8,
         }}
       >
-        {/* minWidth 0 + overflowWrap: user-authored names can be long
-            unbroken tokens ("release_preview_internal") that would
-            otherwise push the tag/count/delete outside the tile.
-            Multi-word names still wrap at spaces like the built-ins. */}
         <span
           style={{
             fontFamily: "var(--font-sans)",
@@ -617,56 +674,18 @@ function TemplateTile({
             fontWeight: 600,
             color: "var(--ink-900)",
             minWidth: 0,
+            // Backstop for unbroken tokens; with the full tile width this
+            // breaks a long name once, not per-character.
             overflowWrap: "anywhere",
           }}
         >
           {displayName}
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-          {custom && (
-            <span
-              className="mono"
-              style={{
-                fontSize: 9,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--accent-deep)",
-                background: "rgba(216, 154, 78, 0.14)",
-                border: "1px solid var(--accent-soft)",
-                borderRadius: 999,
-                padding: "1px 6px",
-              }}
-            >
-              Custom
-            </span>
-          )}
-          {template && (
-            <span className="mono" style={{ fontSize: 10, color: "var(--ink-500)" }}>
-              {template.outline.length} slides
-            </span>
-          )}
-          {/* Span, not button: the tile itself is already a button and
-              nested buttons are invalid HTML. */}
-          {onDelete && (
-            <span
-              role="button"
-              aria-label={`Delete template ${displayName}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              style={{
-                color: "var(--ink-500)",
-                fontSize: 14,
-                lineHeight: 1,
-                padding: "0 2px",
-                cursor: "pointer",
-              }}
-            >
-              ×
-            </span>
-          )}
-        </span>
+        {!custom && template && (
+          <span className="mono" style={{ fontSize: 10, color: "var(--ink-500)", flexShrink: 0 }}>
+            {template.outline.length} slides
+          </span>
+        )}
       </div>
       <span
         style={{
