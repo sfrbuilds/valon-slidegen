@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDeckRedraftPrompt } from "@/lib/prompts";
 import { parseDeckRedraft } from "@/lib/deck-schema";
+import { enforceChartGrounding } from "@/lib/chart-grounding";
 import { mergeDeckSlides } from "@/lib/deck-merge";
 import {
   detectsChartIntent,
@@ -74,10 +75,22 @@ export async function POST(req: Request) {
       }
     }
 
+    // The model's isDummyData claim is a hint; verify plotted values
+    // against user-provided text only (brief, reference doc, chat
+    // instructions). Assistant messages are excluded so model-invented
+    // numbers cannot ground themselves on a later turn.
+    const sourceText = [
+      body.deck.brief,
+      body.deck.contextDoc?.text ?? "",
+      body.instruction,
+      ...body.chatHistory.filter((m) => m.role === "user").map((m) => m.content),
+    ].join("\n");
+    const groundedSlides = enforceChartGrounding(parsed.value.slides, sourceText);
+
     // Identity-aware merge: slides are matched by the sourceSlideId the
     // model echoes back (see lib/deck-merge.ts for the fallbacks).
     const response: RedraftDeckResponse = {
-      slides: mergeDeckSlides(body.slides, parsed.value.slides, {
+      slides: mergeDeckSlides(body.slides, groundedSlides, {
         chartRemoval,
         imageRemoval,
       }),

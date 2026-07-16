@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildRedraftPrompt } from "@/lib/prompts";
 import { parseSlideRedraft } from "@/lib/deck-schema";
+import { enforceChartGrounding } from "@/lib/chart-grounding";
 import {
   detectsChartIntent,
   detectsChartRemoval,
@@ -76,13 +77,25 @@ export async function POST(req: Request) {
       }
     }
 
+    // The model's isDummyData claim is a hint; verify plotted values
+    // against user-provided text only (brief, reference doc, chat
+    // instructions). Assistant messages are excluded so model-invented
+    // numbers cannot ground themselves on a later turn.
+    const sourceText = [
+      body.deck.brief,
+      body.deck.contextDoc?.text ?? "",
+      body.instruction,
+      ...body.chatHistory.filter((m) => m.role === "user").map((m) => m.content),
+    ].join("\n");
+    const [groundedSlide] = enforceChartGrounding([parsed.value.slide], sourceText);
+
     // Merge semantics:
     // - Default: preserve an existing visual the model omitted (models are
     //   lazy about echoing unchanged fields).
     // - Removal intent: honor the omission as a deliberate clear.
     // - One-visual rule: a newly added chart clears the image, and vice versa.
     const prior = body.slide;
-    const next = parsed.value.slide;
+    const next = groundedSlide;
     let chartData = chartRemoval ? next.chartData : next.chartData ?? prior.chartData;
     let imageIdea = imageRemoval ? next.imageIdea : next.imageIdea ?? prior.imageIdea;
     let imageData = imageRemoval ? undefined : prior.imageData;

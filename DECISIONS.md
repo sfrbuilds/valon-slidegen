@@ -26,8 +26,9 @@ specific decision:
 - New Ventures **pitching internally or to a partner**: "New Ventures
   Pitch", "Partner Pitch: New Vertical".
 
-The eight templates encode the decks that actually recur on Valon's
-leadership cadence.
+The eight templates encode the decks we infer recur on the leadership
+cadence of a company shaped like Valon: a hypothesis built from the team
+structure and common operating rhythms, not from user interviews.
 
 **Output changes with who is presenting and to whom.** Team x audience
 selects one of eight tone profiles (`lib/tones.ts`) whose rules and
@@ -86,6 +87,25 @@ the schema requires `isDummyData: true` and the UI and PPTX export both show
 an "Illustrative data" chip. Fabricated figures should never silently look
 real in a board deck. The parser defaults to `true` when the model omits the
 field: conservative by default.
+
+**Chart provenance is verified, not trusted.** A live test showed the
+model charting [19, 21, 23, 25] as real data when the brief contained
+only the 25: a brief with SOME figures read as license to mark a whole
+interpolated series `isDummyData: false`, and the parser accepted the
+claim. The model's provenance claim is now a hint, like chart intent:
+`lib/chart-grounding.ts` extracts every numeric token from the brief,
+reference document, and the user's own chat messages, and any chart
+claiming real data whose plotted values are not all present in that
+source text is overridden to illustrative before the response leaves the
+route. Assistant messages are excluded from the source so model-invented
+numbers cannot ground themselves on a later turn. Deliberately
+conservative: a value the model derived arithmetically stays labeled
+illustrative, because mislabeling a real number costs a chip while
+mislabeling an invented one costs trust. Prose has no equivalent
+mechanical check, so the drafting prompts carry a factual-grounding
+block: no invented metrics, percentages, dates, or names; missing
+figures become "[data needed: ...]" placeholders; years are never
+inferred.
 
 **Chart intent as hint, not enforcer.** Keyword detection appends a forcing
 directive and drives a single retry when the model returns no chart. After

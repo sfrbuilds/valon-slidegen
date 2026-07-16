@@ -3,6 +3,7 @@ import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDraftPrompt } from "@/lib/prompts";
 import { parseCustomTemplate, parseDeckDraft, toSlide } from "@/lib/deck-schema";
 import { detectsChartIntent, CHART_MISS_WARNING } from "@/lib/chart-intent";
+import { enforceChartGrounding } from "@/lib/chart-grounding";
 import { GEMINI_DRAFT_RESPONSE_SCHEMA } from "@/lib/response-schemas";
 import type { DraftDeckRequest, DraftDeckResponse } from "@/lib/types";
 
@@ -74,9 +75,16 @@ export async function POST(req: Request) {
       }
     }
 
+    // The model's isDummyData claim is a hint; verify every plotted
+    // value against the text the user actually provided.
+    const grounded = enforceChartGrounding(
+      parsed.value.slides,
+      `${body.brief}\n${body.contextDoc?.text ?? ""}`
+    );
+
     const response: DraftDeckResponse = {
       deckTitle: parsed.value.deckTitle,
-      slides: parsed.value.slides.map(toSlide),
+      slides: grounded.map(toSlide),
       ...(warning ? { warning } : {}),
     };
     return NextResponse.json(response);

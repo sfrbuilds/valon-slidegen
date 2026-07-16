@@ -18,8 +18,10 @@ conversation: describe the deck, pick team and audience, iterate in chat
 against a live preview, export as fully editable PowerPoint / Google
 Slides. Gemini writes; the user stays the editor of record.
 
-**Objectives / KPIs** *(proposed at v0, targets to be validated at the
-July 22 review and instrumented in the iteration sprint)*:
+**Objectives / KPIs.** The targets below, and the ROI model after them,
+are hypotheses built from inferred roles and common operating cadences,
+not from user interviews; they are inputs to the July 22 review and get
+instrumented (or corrected) in the iteration sprint:
 
 | KPI | Target |
 |---|---|

@@ -20,7 +20,9 @@ localhost-only by design.
   `lib/deck-schema.ts`. If you add a model-returned field, add validation
   and a test.
 - Fabricated chart numbers must carry `isDummyData: true`. The parser
-  defaults to true when the field is missing. Never weaken this.
+  defaults to true when the field is missing, and the routes verify an
+  explicit false against the user's own text (`lib/chart-grounding.ts`):
+  ungrounded claims are overridden to true. Never weaken either layer.
 - The Anthropic API key is a dev-tool credential only. Never import an
   Anthropic SDK into app code.
 - Never commit API keys. `.env.local` is gitignored; keep it that way.

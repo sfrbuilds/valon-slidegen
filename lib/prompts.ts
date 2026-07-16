@@ -28,6 +28,18 @@ import { templateById, templateOutlineBlock, type Template } from "./templates";
 export const IDENTITY_LINE =
   "You are Valon's presentation writer. Valon is an AI-native operating system for regulated finance, starting with mortgage servicing. Decks are professional, editorial, and warm.";
 
+// Included in every drafting and revision prompt. Fabricated business
+// facts in a board deck are the product's worst failure mode; prose
+// cannot be mechanically verified the way chart values are (see
+// lib/chart-grounding.ts), so the prompt is the only line of defense.
+export const FACTUAL_GROUNDING_RULES = `
+Factual grounding, non-negotiable:
+- Never invent specific business facts: metrics, percentages, dollar figures, growth rates, dates, client or partner names, or outcomes that are not stated in the brief, the reference document, or the user's instructions.
+- Where a specific figure would strengthen a slide but was not provided, write a bracketed placeholder instead, e.g. "[data needed: new-client acquisition performance]". Placeholders are expected and welcome; plausible-looking invented numbers are not.
+- Never infer calendar years, quarters, or dates that were not given. If the brief says "Q2" with no year, write "Q2", not "Q2 2024".
+- General, non-numeric industry context is fine; specific invented figures are not.
+`.trim();
+
 export const BRAND_STYLE_LAYER = `
 Style: warm editorial fintech aesthetic. Palette anchored in deep brown-ink
 (#141210) on warm cream and white paper (#F6F1EA, #FFFFFF), with a single
@@ -50,7 +62,9 @@ Chart primitive (available on content slides):
   "isDummyData": true | false
 }
 Rules for charts:
-- "isDummyData" MUST be true whenever the numbers were not provided in the brief or the reference document. If the user gave specific figures (e.g. "$150M ARR", "12% growth"), use those and set isDummyData to false. Otherwise fabricate a directionally reasonable series and set isDummyData to true so the UI can flag the numbers as illustrative.
+- "isDummyData" may be false ONLY when EVERY plotted value is explicitly present in the brief or the reference document. If even one value in the series is inferred, interpolated, back-computed, or invented, set isDummyData to true. A brief containing SOME figures is not license to mark a whole series as real.
+- The application independently verifies every plotted value against the brief and reference document and overrides false claims, so misreporting provenance only produces an inconsistent deck.
+- When the brief provides only part of a series, either chart only the provided values or fabricate the rest and set isDummyData to true.
 - Use "bar" for discrete categories (quarters, segments, cohorts) and "line" for continuous trends over time.
 - Labels and each series' values must have equal length.
 - Series "name" should carry the unit (e.g. "AUM ($B)", "Loans processed (K)", "Growth (%)"), not just the metric. This is what renders in the tooltip and, for multi-series, in the legend.
@@ -69,15 +83,15 @@ Rules for charts:
 const CHART_FORCING_DIRECTIVE_DRAFT = `
 CRITICAL: The brief explicitly asks for a chart, graph, or data visualization.
 At least ONE content slide in this deck MUST include a "chartData" object populated with real numeric values.
-If the brief provides specific numbers, use them and set "isDummyData": false.
-If numbers are not provided, fabricate a directionally reasonable series and set "isDummyData": true so the UI can flag them as illustrative.
+Set "isDummyData": false ONLY if every plotted value comes from the brief or reference document.
+If any value must be fabricated, fabricate a directionally reasonable series and set "isDummyData": true so the UI can flag them as illustrative.
 Do not describe the chart in bullets or imageIdea instead. Return actual chartData.
 `.trim();
 
 const CHART_FORCING_DIRECTIVE_REDRAFT = `
 CRITICAL: The user's instruction explicitly asks for a chart, graph, or data visualization.
 You MUST include a "chartData" object in your response, populated with real values.
-If specific numbers were not provided in the brief, context document, or prior chat, fabricate a directionally reasonable series and set "isDummyData": true.
+Set "isDummyData": false ONLY if every plotted value was provided in the brief, context document, or the user's own chat messages. Otherwise fabricate a directionally reasonable series and set "isDummyData": true.
 Do not describe the chart in bullets or imageIdea instead. Return actual chartData.
 `.trim();
 
@@ -245,6 +259,8 @@ export function buildDraftPrompt(input: {
     "",
     toneBlock(tone),
     "",
+    FACTUAL_GROUNDING_RULES,
+    "",
     DRAFT_RESPONSE_SHAPE,
     "",
     lengthGuidance,
@@ -293,6 +309,8 @@ export function buildRedraftPrompt(input: {
     chatHistoryBlock(input.chatHistory, input.slide.id),
     "",
     `Revision instruction from the author: ${input.instruction}`,
+    "",
+    FACTUAL_GROUNDING_RULES,
     "",
     CHART_DATA_SCHEMA,
     "",
@@ -343,6 +361,8 @@ export function buildDeckRedraftPrompt(input: {
     chatHistoryBlock(deckHistory, ""),
     "",
     `Revision instruction from the author (applies to the whole deck): ${input.instruction}`,
+    "",
+    FACTUAL_GROUNDING_RULES,
     "",
     CHART_DATA_SCHEMA,
     "",
