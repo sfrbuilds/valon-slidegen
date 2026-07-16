@@ -606,12 +606,18 @@ function TemplateTile({
           gap: 8,
         }}
       >
+        {/* minWidth 0 + overflowWrap: user-authored names can be long
+            unbroken tokens ("release_preview_internal") that would
+            otherwise push the tag/count/delete outside the tile.
+            Multi-word names still wrap at spaces like the built-ins. */}
         <span
           style={{
             fontFamily: "var(--font-sans)",
             fontSize: 13,
             fontWeight: 600,
             color: "var(--ink-900)",
+            minWidth: 0,
+            overflowWrap: "anywhere",
           }}
         >
           {displayName}
