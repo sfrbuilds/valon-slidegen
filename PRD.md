@@ -19,6 +19,11 @@ a live preview, export a fully editable PowerPoint deck (.pptx). Gemini
 provides the draft; the user then makes iterative edits, both directly on
 the slides and as follow-on refinements with Gemini in chat.
 
+SlideGen v0 is an upgraded version built on an earlier internal prototype
+([valon-presentation-takehome](https://github.com/kylerussell-valon/valon-presentation-takehome));
+what was kept, what was replaced, and why is recorded in
+[DECISIONS.md](./DECISIONS.md).
+
 **Objectives / KPIs.** The targets below, and the ROI model after them,
 are hypotheses built from inferred roles and common operating cadences,
 not from user interviews; they are inputs to the July 22 review and get
@@ -42,7 +47,7 @@ measured usage during the iteration sprint)*:
 | Time returned per deck | 2 to 3 h |
 | Decks/month at target adoption (30 creators × ~2) | ~60 |
 | Hours returned per month | 120 to 180 h |
-| Loaded internal cost, blended across the named personas | $150/h (conservative; a CoS or GTM lead at a fintech runs above this) |
+| Loaded internal cost, blended across the named personas | $150/h (conservative) |
 | **Monthly value of returned time** | **$18k to $27k** |
 | Model cost per deck lifecycle (draft, revisions, review, images) | on the order of $0.50 |
 | Monthly run cost at target volume (tokens + hosted deployment) | < $100 |
@@ -86,77 +91,105 @@ the built-in set.
 
 ## 3. Features & functional requirements
 
-Each feature with its acceptance criteria.
+Each feature lists what it does, then its acceptance criteria.
 
-**Draft from a brief.** User provides a brief, team, audience; optional
-reference document (PDF/DOCX/TXT/MD), template, and slide count.
-*Accepts:* a complete deck renders in the workspace; every slide passes
-schema validation before becoming state; deck length follows the brief by
-default (a brief that says "6 slides: slide 1…, slide 2…" yields exactly
-that), with explicit counts and templates as opt-in overrides.
+**Draft from a brief**
+- User provides a brief, team, and audience; optional reference document
+  (PDF/DOCX/TXT/MD), template, and slide count.
+- *Accepts:*
+  - A complete deck renders in the workspace.
+  - Every slide passes schema validation before becoming state.
+  - Deck length follows the brief by default (a brief that says
+    "6 slides: slide 1…, slide 2…" yields exactly that); explicit counts
+    and templates are opt-in overrides.
 
-**Eight tone profiles (team × audience).** Rules and avoid-lists differ
-in kind, not degree, per pair; injected into every draft and revision
-prompt. *Accepts:* full rules visible at setup (hover); same brief
-produces materially different copy across pairs.
+**Eight tone profiles (team × audience)**
+- Rules and avoid-lists differ in kind, not degree, per pair; injected
+  into every draft and revision prompt.
+- *Accepts:*
+  - Full rules visible at setup (hover).
+  - The same brief produces materially different copy across pairs.
 
-**Templates.** Eight built-in slide-by-slide outlines plus user-created
-templates ("Save as template" derives structure from any deck: layouts,
-headings, content shape, never values, so no chart numbers and no image
-payloads). *Accepts:* custom templates appear on the landing grid with a
-Custom tag, hover outline preview, and delete; drafting through one
-follows its structure; the outline travels in the request and is
-validated server-side (unknown layouts and oversized outlines reject
-with a 400).
+**Templates**
+- Eight built-in slide-by-slide outlines, plus user-created templates:
+  "Save as template" derives structure from any deck (layouts, headings,
+  content shape), never values, so no chart numbers and no image
+  payloads.
+- *Accepts:*
+  - Custom templates appear on the landing grid with a Custom tag, hover
+    outline preview, and delete.
+  - Drafting through a template follows its structure.
+  - The outline travels in the request and is validated server-side;
+    unknown layouts and oversized outlines reject with a 400.
 
-**Chat revision, slide or deck scope.** Multi-turn history rides along;
-whole-deck edits merge by stable slide identity so reorders, inserts, and
-deletions keep images attached to the right content. *Accepts:* "remove
-the chart" removes it (explicit removal detection); a missing requested
-chart degrades to a visible warning after one retry, never a failed
-draft.
+**Chat revision, slide or deck scope**
+- Multi-turn history rides along; whole-deck edits merge by stable slide
+  identity, so reorders, inserts, and deletions keep images attached to
+  the right content.
+- *Accepts:*
+  - "Remove the chart" removes it (explicit removal detection).
+  - A missing requested chart degrades to a visible warning after one
+    retry, never a failed draft.
 
-**Native editable charts.** Bar/line, single or multi-series; fabricated
-numbers carry `isDummyData: true` (parser defaults to true) and render an
-"Illustrative data" chip on screen and in the export. *Accepts:* charts
-land in the exported file as native chart objects, fully editable.
+**Native editable charts**
+- Bar/line, single or multi-series; fabricated numbers carry
+  `isDummyData: true` (parser defaults to true) and render an
+  "Illustrative data" chip on screen and in the export.
+- *Accepts:*
+  - Charts land in the exported file as native chart objects, fully
+    editable.
 
-**Factual grounding, layered.** Prompt rules ban invented business facts,
-qualitative claims included (unsupported assertions of traction, targets,
-or momentum count as fabrications even without a number); missing figures
-become "[data needed: ...]" placeholders; decision briefs close with
-framed options and placeholders, never an invented rationale. Chart
-values claimed as real are mechanically verified against the brief,
-reference document, and the user's own chat messages, and overridden to
-illustrative when ungrounded: a deliberately conservative numeric
-provenance guard, not semantic grounding. *Accepts:* a brief with partial
-figures produces placeholders, not invented numbers or dates; a chart
-claiming real data whose values are not all present in the source renders
-the Illustrative chip regardless.
+**Factual grounding, layered**
+- Prompt rules ban invented business facts, qualitative claims included:
+  unsupported assertions of traction, targets, or momentum count as
+  fabrications even without a number.
+- Missing figures become "[data needed: ...]" placeholders; decision
+  briefs close with framed options and placeholders, never an invented
+  rationale.
+- Chart values claimed as real are mechanically verified against the
+  brief, reference document, and the user's own chat messages, and
+  overridden to illustrative when ungrounded: a deliberately conservative
+  numeric provenance guard, not semantic grounding.
+- *Accepts:*
+  - A brief with partial figures produces placeholders, not invented
+    numbers or dates.
+  - A chart claiming real data whose values are not all present in the
+    source renders the Illustrative chip regardless.
 
-**Review (internal name: eval).** On-demand pass judging every slide
-against the deck's tone rules and the grounding rubric: company-specific
-claims must be supported by the brief, the reference document, or the
-user's own chat messages. Verdict is pass / needs-revision; findings
-quote offending copy and jump to the slide; "Fix findings" runs one
-bounded minimal-edit pass (off-tone copy rewritten in tone, ungrounded
-claims replaced with placeholders or grounded statements), logged in
-chat, then re-checks once. *Accepts:* flags only clear, material
-violations; never auto-iterates to green.
+**Review (internal name: eval)**
+- On-demand pass judging every slide against the deck's tone rules and
+  the grounding rubric: company-specific claims must be supported by the
+  brief, the reference document, or the user's own chat messages.
+- Verdict is pass / needs-revision; findings quote offending copy and
+  jump to the slide.
+- "Fix findings" runs one bounded minimal-edit pass (off-tone copy
+  rewritten in tone, ungrounded claims replaced with placeholders or
+  grounded statements), logged in chat, then re-checks once.
+- *Accepts:*
+  - Flags only clear, material violations.
+  - Never auto-iterates to green.
 
-**Inline editing & slide rail.** Click-to-edit headings, subheadings,
-bullets; add / delete / drag-to-reorder slides. *Accepts:* light edits
-complete in-app so export is the last step, not the start of a second
-editing pass.
+**Inline editing & slide rail**
+- Click-to-edit headings, subheadings, bullets; add / delete /
+  drag-to-reorder slides.
+- *Accepts:*
+  - Light edits complete in-app, so export is the last step, not the
+    start of a second editing pass.
 
-**Export.** Native .pptx download. *Accepts:* every text box, bullet, and
-chart in the exported file is an editable object.
+**Export**
+- Native .pptx download.
+- *Accepts:*
+  - Every text box, bullet, and chart in the exported file is an
+    editable object.
 
-**Technical constraints.** Next.js 15 / React 19 / TypeScript strict;
-Gemini for all runtime AI (text + image); all prompts centralized in
-`lib/prompts.ts`; nothing model-returned becomes state without a parser
-in `lib/deck-schema.ts`; localStorage behind a storage interface; 502
-only for unusable model output, degradable problems return warnings.
+**Technical constraints**
+- Next.js 15 / React 19 / TypeScript strict.
+- Gemini for all runtime AI (text + image).
+- All prompts centralized in `lib/prompts.ts`; nothing model-returned
+  becomes state without a parser in `lib/deck-schema.ts`.
+- localStorage behind a storage interface.
+- 502 only for unusable model output; degradable problems return
+  warnings.
 
 ## 4. UX/UI
 
@@ -220,12 +253,12 @@ Deliberate exclusions, with rationale in DECISIONS.md:
 
 | Date | Milestone |
 |---|---|
-| Jul 14-21, 2026 | v0 development |
-| **Jul 21** | **v0 initial release: submission to the panel** |
-| **Jul 22** | **Prototype presentation + joint panel review** (this PRD's KPIs, ROI model, and scope are inputs to that discussion) |
-| Jul 23 - Aug 5 | Iteration sprint: panel feedback, KPI instrumentation, hardening (candidate items: IndexedDB image storage, real-data chart ingestion, hosted deployment with auth) |
-| ~Aug 6 | Second review touchpoint: go / no-go on launch scope |
-| Late Aug 2026 | Planned launch / go-live to Valon teams |
+| Jul&nbsp;14-21,&nbsp;2026 | v0 development |
+| **Jul&nbsp;21** | **v0 initial release: submission to the panel** |
+| **Jul&nbsp;22** | **Prototype presentation + joint panel review** (this PRD's KPIs, ROI model, and scope are inputs to that discussion) |
+| Jul&nbsp;23&nbsp;-&nbsp;Aug&nbsp;5 | Iteration sprint: panel feedback, KPI instrumentation, hardening (candidate items: IndexedDB image storage, real-data chart ingestion, hosted deployment with auth) |
+| ~Aug&nbsp;6 | Second review touchpoint: go / no-go on launch scope |
+| Late&nbsp;Aug&nbsp;2026 | Planned launch / go-live to Valon teams |
 
 Testing gates throughout: `npm run typecheck` and `npm test` (unit tests
 on the pure `lib/` layer) green before any milestone; live end-to-end
