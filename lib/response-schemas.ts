@@ -94,7 +94,7 @@ export const GEMINI_DECK_REDRAFT_RESPONSE_SCHEMA: Schema = {
 export const GEMINI_EVAL_RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
-    verdict: { type: Type.STRING, enum: ["on-brand", "needs-revision"] },
+    verdict: { type: Type.STRING, enum: ["pass", "needs-revision"] },
     findings: {
       type: Type.ARRAY,
       items: {

@@ -259,14 +259,22 @@ describe("parseDeckRedraft", () => {
 });
 
 describe("parseEvalResult", () => {
-  it("parses an on-brand verdict", () => {
+  it("parses a pass verdict", () => {
     const result = parseEvalResult(
-      JSON.stringify({ verdict: "on-brand", findings: [] })
+      JSON.stringify({ verdict: "pass", findings: [] })
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.verdict).toBe("on-brand");
+    expect(result.value.verdict).toBe("pass");
     expect(result.value.findings).toHaveLength(0);
+  });
+
+  it("rejects the retired on-brand verdict", () => {
+    // Renamed 2026-07: the review covers tone AND grounding, so the
+    // verdict is "pass". A model echoing the old value must not parse.
+    expect(
+      parseEvalResult(JSON.stringify({ verdict: "on-brand", findings: [] })).ok
+    ).toBe(false);
   });
 
   it("parses findings with and without slide numbers", () => {

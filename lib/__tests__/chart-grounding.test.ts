@@ -52,8 +52,14 @@ describe("enforceChartGrounding", () => {
     expect(result[0].chartData?.isDummyData).toBe(true);
   });
 
-  it("keeps a fully grounded chart marked real", () => {
-    // 25, 40, 22 and 5 all appear in the brief text.
+  it("keeps a chart marked real when every value appears in the source", () => {
+    // KNOWN LIMITATION, documented on purpose: 25, 40, and 22 do appear
+    // in the brief, but as ARR ($M), growth (%), and runway (months).
+    // The guard checks value-level provenance only - it cannot tell that
+    // an "ARR" series borrowing all three is semantically wrong. Cross-
+    // metric collisions like this pass; the prompt rules are the only
+    // defense at that layer. If this behavior changes, this test should
+    // change with it.
     const slides = [{ chartData: chart([25, 40, 22], false) }];
     const result = enforceChartGrounding(slides, REVIEWER_BRIEF);
     expect(result[0].chartData?.isDummyData).toBe(false);

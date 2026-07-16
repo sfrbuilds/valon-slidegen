@@ -64,6 +64,25 @@ export default function WorkspacePage() {
   const [tplNameOpen, setTplNameOpen] = useState(false);
   const [tplName, setTplName] = useState("");
   const [tplSaved, setTplSaved] = useState(false);
+  // Responsive layout. Inline styles cannot carry media queries, so the
+  // viewport width is tracked in state. On laptop widths the fixed side
+  // columns would starve the slide canvas (680px at a 1280px window), so
+  // the rail narrows and the chat panel starts collapsed, reopenable from
+  // its strip. null until mounted; SSR has no window.
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+  // null = follow the viewport default (open on wide screens, collapsed
+  // when compact). true/false = the user toggled the panel explicitly.
+  const [chatOverride, setChatOverride] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const update = () => setViewportWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const compact = (viewportWidth ?? 1440) < 1200;
+  const chatOpen = chatOverride ?? !compact;
 
   useEffect(() => {
     const d = getDeck(params.deckId);
@@ -214,7 +233,7 @@ export default function WorkspacePage() {
   /**
    * One bounded fix pass: findings become a minimal-edit instruction for
    * the deck-redraft route, the edit lands in chat history like any other
-   * revision, then the brand check re-runs once so the verdict updates.
+   * revision, then the review re-runs once so the verdict updates.
    * Deliberately not iterate-until-green: the author stays the editor.
    */
   async function handleFixFindings() {
@@ -227,7 +246,7 @@ export default function WorkspacePage() {
         : `Deck-level: ${f.issue}`
     );
     const instruction = [
-      "A brand check flagged the following tone violations. Fix each one with the smallest edit that resolves it. Do not rewrite anything that was not flagged.",
+      "A deck review flagged the following issues (tone violations or ungrounded claims). Fix each one with the smallest edit that resolves it: rewrite off-tone copy in tone, and replace unsupported claims with bracketed placeholders or grounded statements. Do not rewrite anything that was not flagged.",
       ...findingLines.map((l) => `- ${l}`),
     ].join("\n");
 
@@ -291,6 +310,7 @@ export default function WorkspacePage() {
           contextDoc: deck.contextDoc,
         },
         slides: data.slides,
+        chatHistory: getDeck(deck.id)?.chatHistory ?? deck.chatHistory,
         trigger: "redraft",
       };
       const evalRes = await fetch("/api/eval", {
@@ -346,7 +366,7 @@ export default function WorkspacePage() {
     setTplName("");
   }
 
-  async function handleBrandCheck() {
+  async function handleReview() {
     if (!deck) return;
     setBusy("eval");
     setError(null);
@@ -361,6 +381,7 @@ export default function WorkspacePage() {
           contextDoc: deck.contextDoc,
         },
         slides: deck.slides,
+        chatHistory: deck.chatHistory,
         trigger: "redraft",
       };
       const res = await fetch("/api/eval", {
@@ -417,7 +438,7 @@ export default function WorkspacePage() {
     }
   }
 
-  async function handleExport(alsoOpenSlides: boolean = false) {
+  async function handleExport() {
     if (!deck) return;
     setBusy("export");
     setError(null);
@@ -438,12 +459,6 @@ export default function WorkspacePage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      if (alsoOpenSlides) {
-        // No Google API access here; open Slides so the user drops the
-        // downloaded file into "File > Open > Upload". This is the standard
-        // interop path without an OAuth flow.
-        window.open("https://slides.google.com/", "_blank", "noopener,noreferrer");
-      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -521,7 +536,9 @@ export default function WorkspacePage() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "220px 1fr 380px",
+        gridTemplateColumns: `${compact ? 172 : 220}px minmax(0, 1fr) ${
+          chatOpen ? (compact ? 320 : 380) : 48
+        }px`,
         height: "100vh",
         background: "var(--paper-warm-1)",
       }}
@@ -705,21 +722,13 @@ export default function WorkspacePage() {
             )}
             <Button
               variant="secondary"
-              onClick={handleBrandCheck}
+              onClick={handleReview}
               disabled={busy !== "idle"}
-              title="Reviews every slide against this deck's tone rules and flags off-brand copy."
+              title="Reviews every slide for tone and factual grounding: flags off-tone copy and claims not supported by your brief, document, or instructions."
             >
               {busy === "eval" ? "Reviewing..." : "Review"}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleExport(true)}
-              disabled={busy !== "idle"}
-              title="Downloads the .pptx and opens Google Slides. Drop the file into File > Open > Upload."
-            >
-              Open in Google Slides
-            </Button>
-            <Button variant="primary" onClick={() => handleExport(false)} disabled={busy !== "idle"}>
+            <Button variant="primary" onClick={handleExport} disabled={busy !== "idle"}>
               {busy === "export" ? "Exporting..." : "Export .pptx"}
             </Button>
           </div>
@@ -763,6 +772,7 @@ export default function WorkspacePage() {
                   : [
                       `Reading all ${deck.slides.length} slides`,
                       `Judging against the ${TEAM_LABELS[deck.team]} · ${AUDIENCE_LABELS[deck.audience]} tone rules`,
+                      "Checking claims against your brief, document, and instructions",
                       "Writing findings",
                     ]
               }
@@ -882,7 +892,36 @@ export default function WorkspacePage() {
         )}
       </main>
 
-      {/* Chat panel */}
+      {/* Chat panel. Collapsed, it is a slim strip that reopens on click:
+          on compact viewports the slide canvas needs the width more than
+          an idle chat does. */}
+      {!chatOpen ? (
+        <button
+          onClick={() => setChatOverride(true)}
+          title="Open the chat panel"
+          style={{
+            borderLeft: "1px solid var(--ink-100)",
+            border: "none",
+            background: "var(--paper-white)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            paddingTop: 20,
+            gap: 10,
+            height: "100vh",
+            cursor: "pointer",
+            color: "var(--ink-500)",
+          }}
+        >
+          <Sunburst size={16} color="var(--accent)" />
+          <span
+            className="eyebrow"
+            style={{ writingMode: "vertical-rl", fontSize: 10 }}
+          >
+            Revise with chat
+          </span>
+        </button>
+      ) : (
       <aside
         style={{
           borderLeft: "1px solid var(--ink-100)",
@@ -898,8 +937,30 @@ export default function WorkspacePage() {
             borderBottom: "1px solid var(--ink-100)",
           }}
         >
-          <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Revise with chat
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 8,
+            }}
+          >
+            <div className="eyebrow">Revise with chat</div>
+            <button
+              onClick={() => setChatOverride(false)}
+              title="Collapse the chat panel"
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                color: "var(--ink-500)",
+                fontSize: 14,
+                lineHeight: 1,
+                padding: "2px 4px",
+              }}
+            >
+              →
+            </button>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <Chip active={chatScope === "slide"} onClick={() => setChatScope("slide")}>
@@ -1012,6 +1073,7 @@ export default function WorkspacePage() {
           </Button>
         </div>
       </aside>
+      )}
     </div>
   );
 }
@@ -1063,7 +1125,8 @@ function BriefPanel({ brief }: { brief: string }) {
 }
 
 /**
- * Brand-check results panel. Verdict chip plus findings; slide-level
+ * Review results panel (tone + grounding). Verdict chip plus findings;
+ * slide-level
  * findings are clickable and jump to the offending slide.
  */
 function EvalPanel({
@@ -1081,7 +1144,7 @@ function EvalPanel({
   onJumpToSlide: (slideNumber: number) => void;
   onDismiss: () => void;
 }) {
-  const onBrand = evalRun.verdict === "on-brand";
+  const passed = evalRun.verdict === "pass";
   return (
     <div
       style={{
@@ -1089,7 +1152,7 @@ function EvalPanel({
         padding: "16px 20px",
         borderRadius: "var(--radius-md)",
         background: "var(--paper-white)",
-        border: `1px solid ${onBrand ? "var(--accent-soft)" : "var(--ink-100)"}`,
+        border: `1px solid ${passed ? "var(--accent-soft)" : "var(--ink-100)"}`,
       }}
     >
       <div
@@ -1097,7 +1160,7 @@ function EvalPanel({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: onBrand ? 0 : 12,
+          marginBottom: passed ? 0 : 12,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1112,16 +1175,16 @@ function EvalPanel({
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               borderRadius: 999,
-              color: onBrand ? "var(--accent-deep)" : "var(--error)",
-              background: onBrand ? "rgba(216, 154, 78, 0.14)" : "#F9E4E4",
-              border: onBrand
+              color: passed ? "var(--accent-deep)" : "var(--error)",
+              background: passed ? "rgba(216, 154, 78, 0.14)" : "#F9E4E4",
+              border: passed
                 ? "1px solid var(--accent-soft)"
                 : "1px solid rgba(0,0,0,0.06)",
             }}
           >
-            {onBrand ? "On brand" : "Needs revision"}
+            {passed ? "Pass" : "Needs revision"}
           </span>
-          {!onBrand && evalRun.findings.length > 0 && (
+          {!passed && evalRun.findings.length > 0 && (
             <Button
               variant="secondary"
               onClick={onFix}
@@ -1149,7 +1212,7 @@ function EvalPanel({
           ×
         </button>
       </div>
-      {!onBrand && (
+      {!passed && (
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
           {evalRun.findings.map((f, i) => {
             const jumpable =

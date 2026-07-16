@@ -228,7 +228,7 @@ export function parseDeckRedraft(
 }
 
 /**
- * Parse a brand-check (eval) response: verdict + findings.
+ * Parse a deck-review (eval) response: verdict + findings.
  */
 export function parseEvalResult(
   raw: string

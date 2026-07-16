@@ -35,9 +35,11 @@ export const IDENTITY_LINE =
 export const FACTUAL_GROUNDING_RULES = `
 Factual grounding, non-negotiable:
 - Never invent specific business facts: metrics, percentages, dollar figures, growth rates, dates, client or partner names, or outcomes that are not stated in the brief, the reference document, or the user's instructions.
-- Where a specific figure would strengthen a slide but was not provided, write a bracketed placeholder instead, e.g. "[data needed: new-client acquisition performance]". Placeholders are expected and welcome; plausible-looking invented numbers are not.
+- This applies to qualitative claims as much as to numbers. Do not assert company-specific results, performance, traction, efficiency gains, or momentum as fact unless the brief supports them. A claim about how the business is doing is a business fact even when no number is attached.
+- Where a specific figure or result would strengthen a slide but was not provided, write a bracketed placeholder instead, e.g. "[data needed: new-client acquisition performance]". Placeholders are expected and welcome; plausible-looking invented facts are not.
 - Never infer calendar years, quarters, or dates that were not given. If the brief says "Q2" with no year, write "Q2", not "Q2 2024".
-- General, non-numeric industry context is fine; specific invented figures are not.
+- General industry context may appear only when framed as a hypothesis, consideration, or question, never as an unsupported statement about the company itself.
+- Before finalizing, re-read every heading and bullet and ask: is this stated in the brief, the reference document, or the user's instructions? Filler claims about momentum, efficiency, traction, or discipline that merely sound plausible must be deleted or rewritten as a bracketed placeholder.
 `.trim();
 
 export const BRAND_STYLE_LAYER = `
@@ -111,6 +113,7 @@ Rules for the shape:
 - For multi-slide decks, the first slide must use the "title" layout, and "section" should appear sparingly as a divider or closer.
 - For a single-slide deck, use the "content" layout with the actual message (heading plus 2-5 bullets). Do not use "title" for a one-slide deck.
 - Content slides carry 2-5 tight bullets. Never paragraph-length bullets.
+- When the brief culminates in a decision or approval ask, close with a decision slide that does real work: name the decision, frame the options, and carry bracketed placeholders for whatever the brief did not provide (investment required, expected return, supporting evidence, key risks). A bare "decision required" heading is too thin.
 - Add "imageIdea" only where supporting imagery genuinely helps (roughly a third of content slides): a short prompt for an abstract, editorial illustration. Never propose text, charts with numbers, screenshots, or people's faces in the imageIdea.
 
 ${CHART_DATA_SCHEMA}
@@ -152,10 +155,29 @@ Rules:
 - editSummary is a single sentence, plain language, describing the deck-wide edit. Do not overstate what was done.
 `.trim();
 
+// The reviewer model's grounding rubric. The drafting prompts carry
+// FACTUAL_GROUNDING_RULES, but a drafting model self-policing is
+// stochastic; this second pass checks the finished deck from outside
+// against the same principles.
+const EVAL_GROUNDING_RUBRIC = `
+Grounding rules for the review:
+- Flag any company-specific claim about results, performance, traction, targets, efficiency, momentum, market conditions, partnerships, risks, or recommendations that is not supported by the brief, reference document, or the user's instructions.
+- Unsupported qualitative assertions count as ungrounded claims even when they contain no numbers.
+- Bracketed placeholders such as "[data needed: ...]" are acceptable. However, flag a sentence that uses a placeholder while still asserting an unsupported conclusion, such as "[data needed: retention rate] remains strong."
+- General industry context is acceptable only when framed as a hypothesis, consideration, or question. Flag it when presented as an established fact about the company.
+- Faithful restatements of supported facts are grounded.
+- Derived values are acceptable only when clearly labeled as calculated and the calculation follows directly from provided facts without unstated assumptions. Otherwise, flag them or require an illustrative label.
+- If the source materials do not recommend a decision, flag any recommendation presented as the company's position. Presenting decision options is acceptable.
+`.trim();
+
 const EVAL_RESPONSE_SHAPE = `
-Respond with JSON only (no markdown fences, no commentary) in exactly this shape:
-{ "verdict": "on-brand" | "needs-revision", "findings": [{ "slide": <number or omit for deck-level>, "issue": "specific problem, quoting the offending words" }] }
-Verdict "on-brand" requires zero material tone violations. List at most 6 findings, most severe first. An empty findings array is required when the verdict is "on-brand".
+Respond with JSON only in exactly this shape:
+{ "verdict": "pass" | "needs-revision", "findings": [{ "slide": <number or omit for deck-level>, "issue": "specific problem, quoting the offending words" }] }
+
+Findings may be tone violations or ungrounded claims.
+A verdict of "pass" requires zero material findings.
+List at most 6 findings, ordered by severity.
+Return an empty findings array when the verdict is "pass".
 `.trim();
 
 // -------- Reusable blocks --------
@@ -377,6 +399,7 @@ export function buildDeckRedraftPrompt(input: {
 export function buildEvalPrompt(input: {
   deck: Pick<Deck, "title" | "team" | "audience" | "brief" | "contextDoc">;
   slides: Slide[];
+  chatHistory: ChatMessage[];
 }): string {
   const tone = getTone(input.deck.team, input.deck.audience);
   const slideDump = input.slides
@@ -384,19 +407,36 @@ export function buildEvalPrompt(input: {
       const header = `Slide ${index + 1} [${slide.layout}]: ${slide.heading}`;
       const sub = slide.subheading ? `  subtitle: ${slide.subheading}` : null;
       const bullets = slide.bullets.map((b) => `  - ${b}`);
-      return [header, sub, ...bullets].filter(Boolean).join("\n");
+      // Chart values are verified mechanically (lib/chart-grounding.ts),
+      // but the caption is prose only this review sees.
+      const caption = slide.chartData?.caption
+        ? `  chart caption: ${slide.chartData.caption}`
+        : null;
+      return [header, sub, ...bullets, caption].filter(Boolean).join("\n");
     })
     .join("\n");
+  // Only what the user themself wrote counts as a grounding source;
+  // assistant messages are the same model whose claims are under review.
+  const userMessages = input.chatHistory.filter((m) => m.role === "user");
+  const userInstructionsBlock =
+    userMessages.length > 0
+      ? [
+          "",
+          "The user's own instructions and confirmations from the revision chat (facts stated here count as provided):",
+          ...userMessages.map((m) => `- ${m.content}`),
+        ].join("\n")
+      : "";
   return [
-    "You are Valon's brand reviewer. Judge whether this drafted deck follows the required tone. Flag only clear, material violations of the tone rules; do not flag reasonable stylistic choices that a competent writer could defend. Be specific; vague praise helps no one.",
+    "You are Valon's deck reviewer. Judge two things: whether this drafted deck follows the required tone, and whether its claims are grounded in the brief, the reference document, and the user's instructions. Flag only clear, material violations; do not flag reasonable stylistic choices that a competent writer could defend. Be specific; vague praise helps no one.",
     "",
     `Deck: "${input.deck.title}" (team: ${input.deck.team}, audience: ${input.deck.audience}).`,
     `Brief: ${input.deck.brief}`,
-    input.deck.contextDoc
-      ? `The deck must address the reference document "${input.deck.contextDoc.filename}".`
-      : "",
+    contextDocBlock(input.deck.contextDoc),
+    userInstructionsBlock,
     "",
     toneBlock(tone),
+    "",
+    EVAL_GROUNDING_RUBRIC,
     "",
     "The deck:",
     slideDump,

@@ -1,17 +1,25 @@
 /**
- * Chart provenance verification. The model self-reports whether chart
- * numbers came from the user (isDummyData: false) or were fabricated
- * (true). That claim is a hint, never trusted: a live test showed the
- * model charting [19, 21, 23, 25] as "real" when the brief contained
- * only the 25. This module checks every plotted value against the
- * numbers actually present in the source text (brief + reference doc +
- * instruction) and overrides ungrounded "real" claims to illustrative.
+ * Numeric provenance guard for charts. The model self-reports whether
+ * chart numbers came from the user (isDummyData: false) or were
+ * fabricated (true). That claim is a hint, never trusted: a live test
+ * showed the model charting [19, 21, 23, 25] as "real" when the brief
+ * contained only the 25. This module checks every plotted value against
+ * the numbers actually present in the source text (brief + reference
+ * doc + instruction) and overrides ungrounded "real" claims to
+ * illustrative.
  *
- * Deliberately conservative: a value the model derived arithmetically
- * (e.g. back-computing last year from "40% growth") is not in the
- * source text, so it stays labeled illustrative. Mislabeling a real
- * number as illustrative costs a chip; mislabeling an invented number
- * as real costs trust in a board deck.
+ * Scope, stated precisely: this verifies that each VALUE appears in the
+ * source, not that the value belongs to the metric, unit, label, or
+ * relationship the chart claims. A brief containing $25M ARR, 40%
+ * growth, and 22 months runway would ground an "ARR" chart plotting
+ * [25, 40, 22]. It is a conservative guard against invented numbers,
+ * not semantic grounding; the prompt rules carry the semantic burden.
+ *
+ * Deliberately conservative in the other direction too: a value the
+ * model derived arithmetically (e.g. back-computing last year from
+ * "40% growth") is not in the source text, so it stays labeled
+ * illustrative. Mislabeling a real number as illustrative costs a chip;
+ * mislabeling an invented number as real costs trust in a board deck.
  */
 
 import type { ChartData } from "./types";

@@ -9,7 +9,9 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * Brand check: judge a drafted deck against the deck's tone rules.
+ * Deck review: judge a drafted deck against the deck's tone rules and
+ * the grounding rubric (company-specific claims must be supported by
+ * the brief, reference document, or the user's chat instructions).
  * On-demand only (a button in the workspace), so it adds zero latency
  * to drafting and revision. Findings quote the offending copy and are
  * tied to slide numbers so the user can jump straight to the slide.
@@ -30,6 +32,9 @@ export async function POST(req: Request) {
         contextDoc: body.deck.contextDoc,
       },
       slides: body.slides,
+      // Tolerate older clients that omit it; grounding then judges
+      // against the brief and reference document only.
+      chatHistory: Array.isArray(body.chatHistory) ? body.chatHistory : [],
     });
 
     const client = getClient();

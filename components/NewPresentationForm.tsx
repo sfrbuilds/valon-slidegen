@@ -160,7 +160,13 @@ export function NewPresentationForm() {
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };
-      saveDeck(deck);
+      // A failed write means the workspace page would find no deck and
+      // bounce straight back here; surface the real problem instead.
+      if (!saveDeck(deck)) {
+        throw new Error(
+          "The deck was drafted but could not be saved locally - browser storage is likely full. Delete an old deck (or its images) and try again."
+        );
+      }
       router.push(`/decks/${deck.id}`);
     } catch (e) {
       setError((e as Error).message);

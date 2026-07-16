@@ -156,9 +156,9 @@ export type Deck = {
   updatedAt: string; // ISO 8601
 };
 
-// -------- Eval / brand-check --------
+// -------- Eval / deck review --------
 
-export const EVAL_VERDICTS = ["on-brand", "needs-revision"] as const;
+export const EVAL_VERDICTS = ["pass", "needs-revision"] as const;
 export type EvalVerdict = (typeof EVAL_VERDICTS)[number];
 
 export type EvalFinding = {
@@ -234,6 +234,9 @@ export type RedraftDeckResponse = {
 export type EvalRequest = {
   deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDoc">;
   slides: Slide[];
+  // Grounding sources include facts the user stated or confirmed in chat,
+  // so the reviewer needs the conversation to judge them.
+  chatHistory: ChatMessage[];
   trigger: "draft" | "redraft";
 };
 

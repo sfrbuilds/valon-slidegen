@@ -56,7 +56,7 @@ export default function HomePage() {
         <p className="body-md" style={{ maxWidth: 620, margin: "0 auto" }}>
           Enter a short brief on what your presentation should cover, and
           SlideGen drafts every slide. Edit them directly, refine in chat,
-          and export to PowerPoint or Google Slides.
+          and export an editable PowerPoint deck.
         </p>
       </div>
 
