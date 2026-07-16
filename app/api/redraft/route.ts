@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildRedraftPrompt } from "@/lib/prompts";
 import { parseSlideRedraft } from "@/lib/deck-schema";
-import { enforceChartGrounding } from "@/lib/chart-grounding";
+import { enforceChartGrounding, trustedChartNumbers } from "@/lib/chart-grounding";
 import {
   detectsChartIntent,
   detectsChartRemoval,
@@ -87,7 +87,11 @@ export async function POST(req: Request) {
       body.instruction,
       ...body.chatHistory.filter((m) => m.role === "user").map((m) => m.content),
     ].join("\n");
-    const [groundedSlide] = enforceChartGrounding([parsed.value.slide], sourceText);
+    const [groundedSlide] = enforceChartGrounding(
+      [parsed.value.slide],
+      sourceText,
+      trustedChartNumbers([body.slide])
+    );
 
     // Merge semantics:
     // - Default: preserve an existing visual the model omitted (models are

@@ -39,16 +39,37 @@ export function chartIsGrounded(chart: ChartData, tokens: Set<number>): boolean 
 }
 
 /**
+ * Values from charts the user has already accepted as real. The chart
+ * editor has a "Mark as illustrative" checkbox: unticking it is an
+ * explicit human confirmation, and the user is the editor of record.
+ * Without this, a later revision that merely echoes a user-confirmed
+ * chart would get its tag forced back on, silently overriding the
+ * user's decision.
+ */
+export function trustedChartNumbers(
+  slides: Array<{ chartData?: ChartData }>
+): number[] {
+  return slides.flatMap((s) =>
+    s.chartData && !s.chartData.isDummyData
+      ? s.chartData.series.flatMap((series) => series.values)
+      : []
+  );
+}
+
+/**
  * Enforce grounding across a set of slides: any chart claiming real data
  * (isDummyData: false) whose values are not all present in the source
- * text is overridden to illustrative. Charts already marked illustrative
- * and slides without charts pass through untouched.
+ * text (or in `extraTrusted`, e.g. user-confirmed prior charts) is
+ * overridden to illustrative. Charts already marked illustrative and
+ * slides without charts pass through untouched.
  */
 export function enforceChartGrounding<T extends { chartData?: ChartData }>(
   slides: T[],
-  sourceText: string
+  sourceText: string,
+  extraTrusted: Iterable<number> = []
 ): T[] {
   const tokens = extractNumericTokens(sourceText);
+  for (const v of extraTrusted) tokens.add(v);
   return slides.map((slide) => {
     const chart = slide.chartData;
     if (!chart || chart.isDummyData) return slide;

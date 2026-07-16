@@ -3,6 +3,7 @@ import {
   chartIsGrounded,
   enforceChartGrounding,
   extractNumericTokens,
+  trustedChartNumbers,
 } from "../chart-grounding";
 import type { ChartData } from "../types";
 
@@ -92,6 +93,48 @@ describe("enforceChartGrounding", () => {
     const slides = [{ chartData: c }];
     enforceChartGrounding(slides, REVIEWER_BRIEF);
     expect(c.isDummyData).toBe(false); // original untouched
+  });
+});
+
+describe("trustedChartNumbers / user-confirmed priors", () => {
+  it("collects values only from charts the user accepted as real", () => {
+    const slides = [
+      { chartData: chart([16, 18], false) }, // user-confirmed
+      { chartData: chart([99, 98], true) }, // still illustrative
+      { chartData: undefined },
+    ];
+    expect(trustedChartNumbers(slides)).toEqual([16, 18]);
+  });
+
+  it("a revision echoing a user-confirmed chart keeps its tag off", () => {
+    // The user unticked "Mark as illustrative" (prior isDummyData: false)
+    // on values that never appeared in chat. A later revision echoing the
+    // chart must not force the tag back on over the user's decision.
+    const prior = [{ chartData: chart([17.9, 19.5, 23], false) }];
+    const next = [{ chartData: chart([17.9, 19.5, 23], false) }];
+    const result = enforceChartGrounding(
+      next,
+      "make the heading punchier", // no numbers in the instruction
+      trustedChartNumbers(prior)
+    );
+    expect(result[0].chartData?.isDummyData).toBe(false);
+  });
+
+  it("new invented values are still forced illustrative despite trusted priors", () => {
+    const prior = [{ chartData: chart([17.9, 19.5], false) }];
+    const next = [{ chartData: chart([17.9, 19.5, 42], false) }]; // 42 is new
+    const result = enforceChartGrounding(
+      next,
+      "extend the chart one more quarter",
+      trustedChartNumbers(prior)
+    );
+    expect(result[0].chartData?.isDummyData).toBe(true);
+  });
+
+  it("a user confirming a value in chat grounds it (the forgiving flow)", () => {
+    const next = [{ chartData: chart([23], false) }];
+    const result = enforceChartGrounding(next, "no, 23 mn is the true number");
+    expect(result[0].chartData?.isDummyData).toBe(false);
   });
 });
 

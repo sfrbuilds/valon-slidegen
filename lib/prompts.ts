@@ -64,6 +64,7 @@ Chart primitive (available on content slides):
 Rules for charts:
 - "isDummyData" may be false ONLY when EVERY plotted value is explicitly present in the brief or the reference document. If even one value in the series is inferred, interpolated, back-computed, or invented, set isDummyData to true. A brief containing SOME figures is not license to mark a whole series as real.
 - The application independently verifies every plotted value against the brief and reference document and overrides false claims, so misreporting provenance only produces an inconsistent deck.
+- If the user asks to remove the illustrative tag but some plotted values were never provided by them, keep isDummyData true and use the editSummary to ask for confirmation rather than refuse flatly: name the unconfirmed values and ask the user to confirm them in chat (e.g. "yes, 23 is the actual Q1 number"). A user's confirmation of a value counts as providing it; remove the tag on their confirmation.
 - When the brief provides only part of a series, either chart only the provided values or fabricate the rest and set isDummyData to true.
 - Use "bar" for discrete categories (quarters, segments, cohorts) and "line" for continuous trends over time.
 - Labels and each series' values must have equal length.

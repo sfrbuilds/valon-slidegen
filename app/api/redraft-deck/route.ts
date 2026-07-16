@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDeckRedraftPrompt } from "@/lib/prompts";
 import { parseDeckRedraft } from "@/lib/deck-schema";
-import { enforceChartGrounding } from "@/lib/chart-grounding";
+import { enforceChartGrounding, trustedChartNumbers } from "@/lib/chart-grounding";
 import { mergeDeckSlides } from "@/lib/deck-merge";
 import {
   detectsChartIntent,
@@ -85,7 +85,11 @@ export async function POST(req: Request) {
       body.instruction,
       ...body.chatHistory.filter((m) => m.role === "user").map((m) => m.content),
     ].join("\n");
-    const groundedSlides = enforceChartGrounding(parsed.value.slides, sourceText);
+    const groundedSlides = enforceChartGrounding(
+      parsed.value.slides,
+      sourceText,
+      trustedChartNumbers(body.slides)
+    );
 
     // Identity-aware merge: slides are matched by the sourceSlideId the
     // model echoes back (see lib/deck-merge.ts for the fallbacks).
