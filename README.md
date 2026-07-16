@@ -82,17 +82,17 @@ where every text box and chart is a native, editable object.
 
 ## Key files
 
-- `lib/types.ts` — domain model
-- `lib/tones.ts` — 8 team x audience tone definitions
-- `lib/templates.ts` — 8 deck templates with slide-by-slide outlines
-- `lib/prompts.ts` — all Gemini prompts, documented
-- `lib/response-schemas.ts` — Gemini responseSchema definitions
-- `lib/chart-intent.ts` — chart intent and removal detection
-- `lib/deck-schema.ts` — JSON validation for AI outputs
-- `lib/pptx-map.ts` — deck-to-pptx mapping
-- `lib/brand.ts` — brand tokens (colors, fonts, spacing)
-- `lib/__tests__/` — unit tests for the pure lib layer
-- `app/api/draft|redraft|redraft-deck|image|eval|export` — API routes
+- `lib/types.ts` - domain model
+- `lib/tones.ts` - 8 team x audience tone definitions
+- `lib/templates.ts` - 8 deck templates with slide-by-slide outlines
+- `lib/prompts.ts` - all Gemini prompts, documented
+- `lib/response-schemas.ts` - Gemini responseSchema definitions
+- `lib/chart-intent.ts` - chart intent and removal detection
+- `lib/deck-schema.ts` - JSON validation for AI outputs
+- `lib/pptx-map.ts` - deck-to-pptx mapping
+- `lib/brand.ts` - brand tokens (colors, fonts, spacing)
+- `lib/__tests__/` - unit tests for the pure lib layer
+- `app/api/draft|redraft|redraft-deck|image|eval|export` - API routes
 
 ## Product thesis
 
@@ -107,7 +107,8 @@ preparing a board read or investor update (hence the Executive & Board
 tone and the "Illustrative data" guard), Product & Engineering writing a
 launch brief or release notes, New Ventures pitching a partner. Team x
 audience and template selection change the prompts, so the same brief
-produces a different deck for each job. Light edits — inline text, slide
-reorder, chat revision — happen in-app so export is the last step, not
+produces a different deck for each job. Light edits (inline text, slide
+reorder, chat revision) happen in-app so export is the last step, not
 the start of a second editing pass. Full rationale in
-[DECISIONS.md](./DECISIONS.md).
+[DECISIONS.md](./DECISIONS.md); requirements, KPIs, and release plan in
+[PRD.md](./PRD.md).

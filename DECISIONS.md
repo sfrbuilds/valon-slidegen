@@ -13,17 +13,17 @@ export as editable PowerPoint or Google Slides.
 from concrete recurring deck jobs inside Valon, and each job shaped a
 specific decision:
 
-- A GTM or growth person preparing a **quarterly pipeline review** — the
+- A GTM or growth person preparing a **quarterly pipeline review**: the
   "GTM Pipeline Review" template, and the reason chart generation is a
   first-class primitive rather than an afterthought: a pipeline review
   without charts is not a deliverable.
-- A Chief of Staff assembling a **board read or investor update** — the
+- A Chief of Staff assembling a **board read or investor update**: the
   "Board Read" and "Investor Update" templates, the Executive & Board
   tone (leads with numbers and decisions), and the `isDummyData` guard,
   because a fabricated figure in that deck is the worst possible failure.
-- Product & Engineering shipping a **launch brief or release notes** —
+- Product & Engineering shipping a **launch brief or release notes**:
   "Product Launch Brief", "Product Release Notes".
-- New Ventures **pitching internally or to a partner** — "New Ventures
+- New Ventures **pitching internally or to a partner**: "New Ventures
   Pitch", "Partner Pitch: New Vertical".
 
 The eight templates encode the decks that actually recur on Valon's
@@ -34,7 +34,7 @@ selects one of eight tone profiles (`lib/tones.ts`) whose rules and
 avoid-lists are injected into every drafting and revision prompt; the
 chosen template (`lib/templates.ts`) injects a slide-by-slide structural
 outline. The same brief produces a materially different deck for GTM
-external than for Executive & Board internal — by design, not by prompt
+external than for Executive & Board internal, by design, not by prompt
 luck. Details in "Eight tones, not three voices" and "Templates as
 scaffolds" below.
 
@@ -47,7 +47,7 @@ are the inverse: editorial, optional, and never load-bearing.
 **Light edits happen in-app, before export.** The exported file should
 not be the first place a user can fix a word. Inline text editing on the
 slide, a rail with add / delete / drag-to-reorder, and chat revision at
-slide or deck scope mean the deck leaves the app presentation-ready —
+slide or deck scope mean the deck leaves the app presentation-ready:
 export is the last step, not the start of a second editing job in
 PowerPoint.
 
@@ -118,7 +118,7 @@ setup, so the system is visible product surface, not hidden prompt text.
 
 **Deck length follows the brief by default.** The form originally forced
 a slide count, which bulldozed users who had already structured the deck
-in the brief ("6 slides: slide 1 this, slide 2 that") — the forced
+in the brief ("6 slides: slide 1 this, slide 2 that"): the forced
 "produce exactly 8" won over their concept. Default is now Auto: the
 model sizes the deck from the brief and must follow any stated count or
 slide-by-slide structure exactly. Explicit counts remain as opt-in chips,
@@ -130,8 +130,8 @@ copy; the template shapes structure. Floor of first-draft quality goes up
 without decks feeling stamped from a mold.
 
 **Review on demand, not in the loop.** (User-facing name "Review"; the
-internal name is eval — the `/api/eval` route and `EvalRun` types keep
-it.) An automatic eval pass on every
+internal name is eval, kept by the `/api/eval` route and `EvalRun`
+types.) An automatic eval pass on every
 draft adds latency and a second failure mode to the critical path. As a
 button, it costs nothing until asked, and findings quote the offending copy
 with slide numbers that jump to the slide. "Fix findings" closes the loop
