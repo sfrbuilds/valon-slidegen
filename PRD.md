@@ -14,9 +14,10 @@ charts that generic AI slide tools either can't produce or bake into
 images nobody can edit.
 
 **Product.** An internal tool that drafts presentations through
-conversation: describe the deck, pick team and audience, iterate in chat
-against a live preview, export as fully editable PowerPoint / Google
-Slides. Gemini writes; the user stays the editor of record.
+conversation: describe the deck, pick team and audience, iterate against
+a live preview, export a fully editable PowerPoint deck (.pptx). Gemini
+provides the draft; the user then makes iterative edits, both directly on
+the slides and as follow-on refinements with Gemini in chat.
 
 **Objectives / KPIs.** The targets below, and the ROI model after them,
 are hypotheses built from inferred roles and common operating cadences,
@@ -118,12 +119,28 @@ draft.
 **Native editable charts.** Bar/line, single or multi-series; fabricated
 numbers carry `isDummyData: true` (parser defaults to true) and render an
 "Illustrative data" chip on screen and in the export. *Accepts:* charts
-land in PowerPoint and Google Slides as chart objects, editable after
-upload.
+land in the exported file as native chart objects, fully editable.
+
+**Factual grounding, layered.** Prompt rules ban invented business facts,
+qualitative claims included (unsupported assertions of traction, targets,
+or momentum count as fabrications even without a number); missing figures
+become "[data needed: ...]" placeholders; decision briefs close with
+framed options and placeholders, never an invented rationale. Chart
+values claimed as real are mechanically verified against the brief,
+reference document, and the user's own chat messages, and overridden to
+illustrative when ungrounded: a deliberately conservative numeric
+provenance guard, not semantic grounding. *Accepts:* a brief with partial
+figures produces placeholders, not invented numbers or dates; a chart
+claiming real data whose values are not all present in the source renders
+the Illustrative chip regardless.
 
 **Review (internal name: eval).** On-demand pass judging every slide
-against the deck's tone rules; findings quote offending copy and jump to
-the slide; "Fix findings" runs one bounded minimal-edit pass, logged in
+against the deck's tone rules and the grounding rubric: company-specific
+claims must be supported by the brief, the reference document, or the
+user's own chat messages. Verdict is pass / needs-revision; findings
+quote offending copy and jump to the slide; "Fix findings" runs one
+bounded minimal-edit pass (off-tone copy rewritten in tone, ungrounded
+claims replaced with placeholders or grounded statements), logged in
 chat, then re-checks once. *Accepts:* flags only clear, material
 violations; never auto-iterates to green.
 
@@ -132,9 +149,8 @@ bullets; add / delete / drag-to-reorder slides. *Accepts:* light edits
 complete in-app so export is the last step, not the start of a second
 editing pass.
 
-**Export.** Native .pptx (every text box, bullet, chart an editable
-object) plus an "Open in Google Slides" interop path. *Accepts:* no text
-baked into images, ever.
+**Export.** Native .pptx download. *Accepts:* every text box, bullet, and
+chart in the exported file is an editable object.
 
 **Technical constraints.** Next.js 15 / React 19 / TypeScript strict;
 Gemini for all runtime AI (text + image); all prompts centralized in
@@ -150,8 +166,10 @@ No separate wireframes; v0 is its own reference. Three surfaces:
   team/audience with tone preview → length → reference doc) above the
   deck library.
 - **Workspace** (`/decks/[id]`): slide rail left, editable canvas center,
-  chat right; header actions (Save as template, Review, Google Slides,
-  Export) with Export as the single primary action.
+  chat right; header actions (Save as template, Review, Export) with
+  Export as the single primary action. Below roughly 1200px the chat
+  panel collapses to a reopenable strip and the rail narrows, so the
+  slide canvas keeps a usable width on laptops and projectors.
 - **About** (`/about`): what it does, what to watch for, brief-writing
   guidance.
 
@@ -171,8 +189,7 @@ chip vocabulary everywhere.
   accounts, no sync. Known limit: base64 images can hit the quota (writes
   fail loudly; IndexedDB is the graduation path).
 - **Localhost-only by design** for v0; no hosting or deployment config.
-- **pptxgenjs** fidelity bounds export; Google Slides interop is via
-  file upload, not API integration.
+- **pptxgenjs** fidelity bounds export.
 - **unpdf / mammoth** for reference-document extraction.
 
 ## 6. Out of scope (v0)

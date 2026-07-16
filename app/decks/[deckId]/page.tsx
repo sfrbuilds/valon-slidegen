@@ -234,7 +234,7 @@ export default function WorkspacePage() {
    * One bounded fix pass: findings become a minimal-edit instruction for
    * the deck-redraft route, the edit lands in chat history like any other
    * revision, then the review re-runs once so the verdict updates.
-   * Deliberately not iterate-until-green: the author stays the editor.
+   * Deliberately not iterate-until-green: the author reviews every change.
    */
   async function handleFixFindings() {
     if (!deck || !evalRun || evalRun.findings.length === 0) return;

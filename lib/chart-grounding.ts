@@ -49,7 +49,7 @@ export function chartIsGrounded(chart: ChartData, tokens: Set<number>): boolean 
 /**
  * Values from charts the user has already accepted as real. The chart
  * editor has a "Mark as illustrative" checkbox: unticking it is an
- * explicit human confirmation, and the user is the editor of record.
+ * explicit human confirmation, and that choice is authoritative.
  * Without this, a later revision that merely echoes a user-confirmed
  * chart would get its tag forced back on, silently overriding the
  * user's decision.

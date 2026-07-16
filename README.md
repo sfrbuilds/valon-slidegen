@@ -51,19 +51,26 @@ where every text box and chart is a native, editable object.
   Multi-turn history rides along so iterative asks keep context. Charts and
   images can be added, changed, or removed conversationally.
 - **Native editable charts**: bar / line, single or multi-series, value
-  labels, y-axis titles, captions. Charts land editable in PowerPoint and
-  Google Slides. When the model fabricates numbers it must set
+  labels, y-axis titles, captions, exported as fully editable chart
+  objects. When the model fabricates numbers it must set
   `isDummyData: true`, which renders a visible "Illustrative data" chip on
-  screen and in the export.
+  screen and in the export; claimed-real values are verified against the
+  brief, reference document, and the user's chat messages
+  (`lib/chart-grounding.ts`) and overridden to illustrative when
+  ungrounded.
 - **Review on demand**: a reviewer pass that judges every slide against
-  the deck's tone rules and returns findings tied to slide numbers. On-demand
-  by design, so drafting stays fast. "Fix findings" runs one bounded repair
-  pass (smallest edit per finding, logged in chat) and re-checks once.
+  the deck's tone rules and a factual-grounding rubric (company-specific
+  claims must be supported by the brief, reference document, or the
+  user's chat messages), returning a pass / needs-revision verdict and
+  findings tied to slide numbers. On-demand by design, so drafting stays
+  fast. "Fix findings" runs one bounded repair pass (smallest edit per
+  finding, logged in chat) and re-checks once.
 - **Inline editing**: click any heading, subheading, or bullet on the slide.
   Slide rail with add / delete / drag-to-reorder.
 - **Editorial images**: optional Gemini-generated illustrations, brand style
   enforced by a documented style layer, never text baked into images.
-- **Export**: .pptx download plus an "Open in Google Slides" interop path.
+- **Export**: .pptx download; every text box, bullet, and chart is an
+  editable object.
 
 ## Architecture
 

@@ -7,7 +7,7 @@ not built, and why. Written to be read alongside the code.
 
 Valon SlideGen drafts presentation decks through conversation: describe
 the deck, pick team and audience, iterate in chat against a live preview,
-export as editable PowerPoint or Google Slides.
+export an editable PowerPoint deck (.pptx).
 
 **Designed from jobs to be done, not a feature list.** The product starts
 from concrete recurring deck jobs inside Valon, and each job shaped a
@@ -65,8 +65,8 @@ is hidden.
 **2. Text baked into exported images.** Export rendered each slide as one
 full-bleed image, text included, so the "PowerPoint" was a picture of a
 deck. Replaced with a structured slide model mapped to native pptxgenjs
-objects: text boxes, bullets, charts. Everything in the export is editable,
-and charts remain editable after upload to Google Slides.
+objects: text boxes, bullets, charts. Everything in the export is
+editable.
 
 **3. Minimal slide model.** The seed's data model could not represent
 layouts, charts, or notes, which capped every downstream feature. Replaced
@@ -101,11 +101,27 @@ route. Assistant messages are excluded from the source so model-invented
 numbers cannot ground themselves on a later turn. Deliberately
 conservative: a value the model derived arithmetically stays labeled
 illustrative, because mislabeling a real number costs a chip while
-mislabeling an invented one costs trust. Prose has no equivalent
-mechanical check, so the drafting prompts carry a factual-grounding
-block: no invented metrics, percentages, dates, or names; missing
-figures become "[data needed: ...]" placeholders; years are never
-inferred.
+mislabeling an invented one costs trust. The guard's scope is stated
+honestly: it verifies that each plotted value appears somewhere in the
+source, not that the value belongs to the metric or unit the chart
+claims, so a chart borrowing three unrelated brief numbers would pass.
+That is a known limitation, documented in the module and pinned in its
+tests, and it is why the guard is described as numeric provenance rather
+than semantic grounding.
+
+Prose has no equivalent mechanical check, so the drafting prompts carry a
+factual-grounding block: no invented metrics, percentages, dates, or
+names; no unsupported qualitative claims either, because an assertion of
+traction, momentum, or exceeded targets is a business fact even without a
+number attached; industry context only as a hypothesis, consideration, or
+question, never as a statement about the company; missing figures become
+"[data needed: ...]" placeholders; years are never inferred; and a closing
+self-check makes the model re-read every heading and bullet against the
+brief, reference document, and user instructions. Live regression runs
+against the same brief showed these rules move the drafting model from
+reliably fabricating filler claims to mostly writing placeholders with
+occasional slips, which is why the review pass carries the same rubric as
+a second, independent check (see "Review on demand" below).
 
 **Chart intent as hint, not enforcer.** Keyword detection appends a forcing
 directive and drives a single retry when the model returns no chart. After
@@ -158,17 +174,45 @@ with slide numbers that jump to the slide. "Fix findings" closes the loop
 when the user asks: one bounded pass that applies the smallest edit per
 finding through the deck-revision route, logged in chat like any other
 edit, followed by a single automatic re-check. Deliberately not
-iterate-until-green: repeated silent rewrites hide changes from the author
-of a board deck, and the author stays the editor.
+iterate-until-green: repeated silent rewrites would hide changes from
+the author of a board deck.
+
+**The review judges grounding, not just tone.** The drafting prompts
+carry grounding rules, but a drafting model policing itself is
+stochastic: live runs against the same brief produced one clean deck and
+one asserting unsupported claims about targets and traction. The review
+pass is the second, independent line of defense. Its rubric checks every
+company-specific claim against the brief, the full reference-document
+text, and the user's own chat messages; assistant messages are excluded
+as grounding sources for the same reason as in chart grounding, so the
+model cannot ground its own claims. The rubric also covers the subtler
+patterns live testing surfaced: a sentence that brackets the number but
+asserts the conclusion anyway, and a recommendation presented as the
+company's position when the source materials only ask for a decision.
+The verdict pair is "pass" / "needs-revision"; it was renamed from
+"on-brand" when grounding entered the rubric, since the old name
+described only half the check. "Fix findings" resolves grounding
+findings by replacing unsupported claims with placeholders or grounded
+statements.
 
 **localStorage behind an interface.** The take-home excludes hosting, so no
 DB and no auth. `lib/storage.ts` isolates persistence so a real backend is
 a one-file swap. Known pressure point: generated images are base64 strings
 and can hit the localStorage quota, so writes return success/failure and
-the UI warns when an image could not be persisted. IndexedDB is the right
-home for image payloads when persistence graduates.
+the UI warns when an image could not be persisted; a failed write at deck
+creation surfaces an error instead of navigating to a deck that was never
+stored. IndexedDB is the right home for image payloads when persistence
+graduates.
 
 ## Deliberately not built
+
+**A Google Slides button.** An earlier header button labeled "Open in
+Google Slides" downloaded the same .pptx as Export and opened an empty
+slides.google.com tab; the user still uploaded the file by hand. The
+label promised an integration that did not exist, so the button was
+removed rather than renamed. Export is the one export action, and a real
+Slides integration (Drive API upload) is a candidate for the iteration
+sprint if users ask for it.
 
 **Web search grounding.** Real risk of hallucinated financial numbers
 landing in investor decks with borrowed authority. If built, it should be
