@@ -26,8 +26,9 @@ what was kept, what was replaced, and why is recorded in
 
 **Objectives / KPIs.** The targets below, and the ROI model after them,
 are hypotheses built from inferred roles and common operating cadences,
-not from user interviews; they are inputs to the July 22 review and get
-instrumented (or corrected) in the iteration sprint:
+not from user interviews; they are inputs to the July 22 review, get
+validated (or corrected) in the research phase, and are instrumented
+during the pilot:
 
 | KPI | Target |
 |---|---|
@@ -38,7 +39,7 @@ instrumented (or corrected) in the iteration sprint:
 | Time saved per recurring deck vs. manual drafting | ≥ 2 hours |
 
 **ROI / value model** *(illustrative planning math, to be replaced with
-measured usage during the iteration sprint)*:
+measured usage during the pilot)*:
 
 | Input | Estimate |
 |---|---|
@@ -51,7 +52,7 @@ measured usage during the iteration sprint)*:
 | **Monthly value of returned time** | **$18k to $27k** |
 | Model cost per deck lifecycle (draft, revisions, review, images) | on the order of $0.50 |
 | Monthly run cost at target volume (tokens + hosted deployment) | < $100 |
-| Build investment: ~3 builder-weeks with AI-assisted development (1 week v0 + 2-week iteration sprint) | ~$18k one-time |
+| Build investment: ~3 builder-weeks with AI-assisted development (1 week prototype + 2-week development phase) | ~$18k one-time |
 
 The savings are scoped to drafting mechanics: structure, first copy,
 formatting, chart construction. The strategic content of the deck stays
@@ -253,12 +254,15 @@ Deliberate exclusions, with rationale in DECISIONS.md:
 
 | Date | Milestone |
 |---|---|
-| Jul&nbsp;14-21,&nbsp;2026 | v0 development |
-| **Jul&nbsp;21** | **v0 initial release: submission to the panel** |
-| **Jul&nbsp;22** | **Prototype presentation + joint panel review** (this PRD's KPIs, ROI model, and scope are inputs to that discussion) |
-| Jul&nbsp;23&nbsp;-&nbsp;Aug&nbsp;5 | Iteration sprint: panel feedback, KPI instrumentation, hardening (candidate items: IndexedDB image storage, real-data chart ingestion, hosted deployment with auth) |
-| ~Aug&nbsp;6 | Second review touchpoint: go / no-go on launch scope |
-| Late&nbsp;Aug&nbsp;2026 | Planned launch / go-live to Valon teams |
+| Jul&nbsp;14-21 | Prototype (v0) development |
+| Jul&nbsp;21&nbsp;(Tue) | Prototype submission to the panel |
+| Jul&nbsp;22&nbsp;(Wed) | Prototype review + discussion (panel). Inputs: working prototype, this PRD's hypotheses and ROI model. Output: agreed research questions and next steps |
+| Jul&nbsp;23-24 | Edits and updates from panel feedback |
+| Jul&nbsp;27&nbsp;-&nbsp;Aug&nbsp;7 | User research: interviews with the target personas (GTM lead, chief of staff, PM), observation of current deck workflows. Output: validated or corrected KPI targets, prioritized backlog |
+| Aug&nbsp;10&nbsp;-&nbsp;Aug&nbsp;21 | Development and iteration against the validated backlog (e.g. cloud-hosted version, multi-model support through smart routing or user selection) |
+| ~Aug&nbsp;24&nbsp;(Mon) | Second panel review: evidence-based go/no-go on pilot scope |
+| Aug&nbsp;25&nbsp;-&nbsp;Sep&nbsp;15 | Pilot with one team (~10 users), instrumentation live; security and IT review in parallel |
+| Late&nbsp;Sep | Launch / go-live to all Valon teams |
 
 Testing gates throughout: `npm run typecheck` and `npm test` (unit tests
 on the pure `lib/` layer) green before any milestone; live end-to-end
