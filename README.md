@@ -5,6 +5,30 @@ describe what they need, pick a team and audience, then iterate with Gemini
 in a chat-first interface while previewing the deck live. Export as editable
 PowerPoint.
 
+## Context
+
+SlideGen v0 builds on an earlier internal prototype,
+[valon-presentation-takehome](https://github.com/kylerussell-valon/valon-presentation-takehome):
+a working seed that could generate slides with Gemini and export a
+PowerPoint file. This repo keeps that foundation and rebuilds the three
+areas that limited what could be built on top of it:
+
+1. **Prompt transparency.** Image generation was steered by a style
+   appendix appended to prompts out of sight. Every instruction sent to
+   the model now lives in one documented module (`lib/prompts.ts`);
+   nothing is added elsewhere.
+2. **Editable output.** Export rendered each slide as a single flat image
+   with the text baked in. Export now produces native PowerPoint objects:
+   every text box, bullet, and chart remains editable after download.
+3. **A structured slide model.** The original model was too thin to
+   represent layouts, charts, tones, or templates. A typed domain model
+   replaced it, validated at the trust boundary before any model output
+   becomes app state.
+
+From there, the feature set below was built on the new foundation. What
+was kept, what was replaced, and what was deliberately not built is
+recorded in [DECISIONS.md](./DECISIONS.md).
+
 ## Setup
 
 ```bash
@@ -20,22 +44,6 @@ Open http://localhost:3000 (or pass `-p 3001` if 3000 is taken).
 npm run typecheck   # strict TypeScript, no emit
 npm test            # vitest unit tests on the pure lib/ layer
 ```
-
-## What the starter repo shipped, and what was fixed
-
-The seed app worked, but three patterns undermined it. All three are removed
-in this fork (details and rationale in [DECISIONS.md](./DECISIONS.md)):
-
-1. A hidden `HOUSE_STYLE_APPENDIX` appended to every image prompt, forcing
-   Comic Sans / clip-art aesthetics into generated images.
-2. Slide export rendered each slide as one full-bleed image with the text
-   baked in: nothing was editable after export.
-3. A minimal slide data model that could not represent structure (layouts,
-   charts, speaker notes), so every downstream feature hit a ceiling.
-
-This fork replaces them with a structured slide model, prompts collected in
-one documented file (`lib/prompts.ts`, nothing hidden), and a PPTX export
-where every text box and chart is a native, editable object.
 
 ## Features
 
