@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
       if ("chart" in spec && spec.chart) {
         const cd = spec.chart.data;
-        // pptxgenjs chart series shape
+        // Convert our chart series into the shape pptxgenjs expects.
         const chartSeries = cd.series.map((s) => ({
           name: s.name,
           labels: cd.labels,

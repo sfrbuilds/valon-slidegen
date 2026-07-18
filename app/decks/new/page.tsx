@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Legacy route. Creation is prompt-first on the landing page now; keep
- * this path working for old links by redirecting home.
+ * Route existed in the original repository; redirect to the prompt-first
+ * landing so it doesn't 404.
  */
 
 import { useEffect } from "react";

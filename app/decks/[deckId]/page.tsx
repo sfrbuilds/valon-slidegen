@@ -68,7 +68,8 @@ export default function WorkspacePage() {
   // viewport width is tracked in state. On laptop widths the fixed side
   // columns would starve the slide canvas (680px at a 1280px window), so
   // the rail narrows and the chat panel starts collapsed, reopenable from
-  // its strip. null until mounted; SSR has no window.
+  // its strip. Starts as null until the component mounts, because
+  // window does not exist during server-side rendering.
   const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   // null = follow the viewport default (open on wide screens, collapsed
   // when compact). true/false = the user toggled the panel explicitly.
@@ -133,7 +134,8 @@ export default function WorkspacePage() {
       let responseWarning: string | undefined;
 
       if (chatScope === "deck") {
-        // Whole-deck revision: one call, full deck in, full deck out.
+        // Whole-deck revision is a single API call: the full deck goes
+        // in, a full revised deck comes back.
         const payload: RedraftDeckRequest = {
           deck: {
             id: deck.id,
@@ -214,7 +216,8 @@ export default function WorkspacePage() {
       };
       addChatMessage(deck.id, assistantMsg);
       if (responseWarning) setWarning(responseWarning);
-      // Re-hydrate local deck from store
+      // Reload the deck from storage so local state reflects what was
+      // just persisted.
       const refreshed = getDeck(deck.id);
       if (refreshed) setDeck(refreshed);
     } catch (e) {
@@ -500,7 +503,8 @@ export default function WorkspacePage() {
     }));
     const refreshed = getDeck(deck.id);
     if (refreshed) setDeck(refreshed);
-    // Reselect a neighbor
+    // After deleting the selected slide, select an adjacent one so the
+    // canvas is never empty.
     if (refreshed && selectedSlideId === slideId) {
       const neighbor =
         refreshed.slides[idx] ?? refreshed.slides[idx - 1] ?? refreshed.slides[0];
@@ -1125,9 +1129,9 @@ function BriefPanel({ brief }: { brief: string }) {
 }
 
 /**
- * Review results panel (tone + grounding). Verdict chip plus findings;
- * slide-level
- * findings are clickable and jump to the offending slide.
+ * Review results panel (tone + grounding). Shows a verdict chip plus a
+ * list of findings; slide-level findings are clickable and jump to the
+ * offending slide.
  */
 function EvalPanel({
   evalRun,
@@ -1889,7 +1893,8 @@ function SlideRailItem({
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
-        // Some browsers require data to be set
+        // Some browsers (notably Firefox) won't start a drag unless
+        // dataTransfer has data set.
         e.dataTransfer.setData("text/plain", String(index));
         onDragStart();
       }}

@@ -214,7 +214,8 @@ function chatHistoryBlock(history: ChatMessage[], slideId: string): string {
   if (history.length === 0) {
     return "";
   }
-  // Filter to messages relevant to this slide (deck-scoped + this slide-scoped)
+  // Keep only messages relevant to this slide: deck-scoped messages and
+  // messages scoped to this specific slide.
   const relevant = history.filter(
     (m) => m.scope === "deck" || (m.scope === "slide" && m.slideId === slideId)
   );

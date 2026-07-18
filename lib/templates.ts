@@ -314,7 +314,7 @@ export function templateOutlineBlock(template: Template): string {
  * Caps for user-authored templates. Custom templates live in the
  * browser's localStorage (invisible to the server), so they travel in
  * the draft request body, and their text is injected into the draft
- * prompt — every field is length-capped at the trust boundary, same
+ * prompt; every field is length-capped at the trust boundary, same
  * reasoning as CONTEXT_DOC_CHAR_CAP.
  */
 export const TEMPLATE_LIMITS = {
@@ -329,7 +329,7 @@ export const TEMPLATE_LIMITS = {
  * Derive a reusable template from a finished deck. Pure structure
  * extraction: reads only the presence and shape of slide content
  * (bullet counts, chart type, series count, image presence), never
- * values — no base64 image payloads and no chart numbers land in the
+ * values: no base64 image payloads and no chart numbers land in the
  * template, so it stays a tiny text blob and last quarter's figures
  * never steer next quarter's draft. Headings are copied verbatim:
  * templateOutlineBlock already instructs the model to adapt the wording

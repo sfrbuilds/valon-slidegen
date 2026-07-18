@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * React context wrapping the storage adapter. Provides deck CRUD plus
- * chat message append plus slide update.
+ * React context wrapping the storage adapter. Provides deck CRUD,
+ * chat message appends, and slide updates.
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";

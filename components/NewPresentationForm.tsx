@@ -239,7 +239,7 @@ export function NewPresentationForm() {
 
         {/* Team + audience share one row. Grid, not wrapping flex: a
             wrapping flex container places items by their UNSHRUNK size,
-            so the tone line never got to truncate — the row just wrapped
+            so the tone line never got to truncate; the row just wrapped
             (visibly, when selecting the team with the longest tone name).
             Grid's minmax(0, 1fr) forces the audience cell to stay in row
             and lets the tone text ellipsize instead. */}
