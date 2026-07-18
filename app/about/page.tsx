@@ -129,12 +129,14 @@ export default function AboutPage() {
 
       <Section title="Writing a brief that drafts well">
         <p>
-          Say what the presentation is for and who will read it. Include the
-          numbers that matter, exactly as you want them to appear. Name the
-          decision or ask if there is one. A brief like &ldquo;5-slide board
-          read: ARR $250M, 40% YoY, runway 22 months, decision needed on the
-          Phoenix expansion&rdquo; will draft dramatically better than
-          &ldquo;make a deck about Q3&rdquo;.
+          We call the input a brief, not a prompt, on purpose: it should
+          brief SlideGen the way you would brief a colleague taking over the
+          deck. Say what the presentation is for and who will read it.
+          Include the numbers that matter, exactly as you want them to
+          appear. Name the decision or ask if there is one. A brief like
+          &ldquo;5-slide board read: ARR $250M, 40% YoY, runway 22 months,
+          decision needed on the Phoenix expansion&rdquo; will draft
+          dramatically better than &ldquo;make a deck about Q3&rdquo;.
         </p>
       </Section>
 

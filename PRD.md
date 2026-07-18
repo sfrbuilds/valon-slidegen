@@ -52,7 +52,7 @@ measured usage during the pilot)*:
 | **Monthly value of returned time** | **$18k to $27k** |
 | Model cost per deck lifecycle (draft, revisions, review, images) | on the order of $0.50 |
 | Monthly run cost at target volume (tokens + hosted deployment) | < $100 |
-| Build investment: ~3 builder-weeks with AI-assisted development (1 week prototype + 2-week development phase) | ~$18k one-time |
+| Build investment: ~3 builder-weeks with AI-assisted development | ~$18k one-time |
 
 The savings are scoped to drafting mechanics: structure, first copy,
 formatting, chart construction. The strategic content of the deck stays
@@ -95,6 +95,10 @@ the built-in set.
 Each feature lists what it does, then its acceptance criteria.
 
 **Draft from a brief**
+- "Brief" is the product's word for the prompt, chosen deliberately: the
+  input should brief the tool the way you would brief a colleague
+  (purpose, audience, key figures, the ask), not just trigger it. The
+  clearer the brief, the better the draft.
 - User provides a brief, team, and audience; optional reference document
   (PDF/DOCX/TXT/MD), template, and slide count.
 - *Accepts:*
