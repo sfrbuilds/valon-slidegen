@@ -19,7 +19,7 @@ import type {
   Slide,
   Team,
 } from "./types";
-import { CONTEXT_DOC_CHAR_CAP } from "./types";
+import { CONTEXT_DOC_CHAR_CAP, MAX_CONTEXT_DOCS } from "./types";
 import { getTone, toneBlock } from "./tones";
 import { templateById, templateOutlineBlock, type Template } from "./templates";
 
@@ -182,28 +182,35 @@ Return an empty findings array when the verdict is "pass".
 
 // -------- Reusable blocks --------
 
-function contextDocBlock(contextDoc: ContextDoc | null): string {
-  if (!contextDoc) {
+function contextDocsBlock(contextDocs: ContextDoc[]): string {
+  if (contextDocs.length === 0) {
     return "";
   }
-  // Re-enforce the cap at the trust boundary. The /api/extract endpoint
-  // caps uploads, but downstream call bodies arrive from the client and
-  // could carry anything.
-  const text = contextDoc.text.slice(0, CONTEXT_DOC_CHAR_CAP);
-  const truncated =
-    contextDoc.truncated || contextDoc.text.length > CONTEXT_DOC_CHAR_CAP;
-  return [
-    "",
-    `Reference document ("${contextDoc.filename}") - the deck must address its content:`,
-    "<document>",
-    text,
-    "</document>",
-    truncated
-      ? "Note: the document was cut off above - treat it as an excerpt, not the complete text."
-      : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  // Re-enforce both caps at the trust boundary: the upload form limits
+  // count and text length in the browser, but request bodies arrive from
+  // the client and could carry anything.
+  const docs = contextDocs.slice(0, MAX_CONTEXT_DOCS);
+  const blocks = docs.map((doc, index) => {
+    const text = doc.text.slice(0, CONTEXT_DOC_CHAR_CAP);
+    const truncated = doc.truncated || doc.text.length > CONTEXT_DOC_CHAR_CAP;
+    const label =
+      docs.length > 1
+        ? `Reference document ${index + 1} of ${docs.length} ("${doc.filename}")`
+        : `Reference document ("${doc.filename}")`;
+    return [
+      "",
+      `${label} - the deck must address its content:`,
+      "<document>",
+      text,
+      "</document>",
+      truncated
+        ? "Note: the document was cut off above - treat it as an excerpt, not the complete text."
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  });
+  return blocks.join("\n");
 }
 
 /**
@@ -250,7 +257,7 @@ export function buildDraftPrompt(input: {
   // structure the brief themselves ("6 slides: slide 1..., slide 2...")
   // must never have that concept bulldozed by a forced count.
   targetLength: number | null;
-  contextDoc: ContextDoc | null;
+  contextDocs: ContextDoc[];
   templateId?: string | null;
   // A custom (user-saved) template, already validated by
   // parseCustomTemplate at the route. Overrides the built-in id lookup:
@@ -278,7 +285,7 @@ export function buildDraftPrompt(input: {
     "",
     "Brief:",
     input.brief,
-    contextDocBlock(input.contextDoc),
+    contextDocsBlock(input.contextDocs),
     templateBlock,
     "",
     toneBlock(tone),
@@ -293,7 +300,7 @@ export function buildDraftPrompt(input: {
 }
 
 export function buildRedraftPrompt(input: {
-  deck: Pick<Deck, "title" | "brief" | "team" | "audience" | "contextDoc">;
+  deck: Pick<Deck, "title" | "brief" | "team" | "audience" | "contextDocs">;
   slide: Slide;
   slideNumber: number;
   totalSlides: number;
@@ -311,7 +318,7 @@ export function buildRedraftPrompt(input: {
     `Deck: "${input.deck.title}" (team: ${input.deck.team}, audience: ${input.deck.audience}).`,
     "Original brief:",
     input.deck.brief,
-    contextDocBlock(input.deck.contextDoc),
+    contextDocsBlock(input.deck.contextDocs),
     "",
     toneBlock(tone),
     "",
@@ -346,7 +353,7 @@ export function buildRedraftPrompt(input: {
 }
 
 export function buildDeckRedraftPrompt(input: {
-  deck: Pick<Deck, "title" | "brief" | "team" | "audience" | "contextDoc">;
+  deck: Pick<Deck, "title" | "brief" | "team" | "audience" | "contextDocs">;
   slides: Slide[];
   instruction: string;
   chatHistory: ChatMessage[];
@@ -376,7 +383,7 @@ export function buildDeckRedraftPrompt(input: {
     `Deck: "${input.deck.title}" (team: ${input.deck.team}, audience: ${input.deck.audience}).`,
     "Original brief:",
     input.deck.brief,
-    contextDocBlock(input.deck.contextDoc),
+    contextDocsBlock(input.deck.contextDocs),
     "",
     toneBlock(tone),
     "",
@@ -398,7 +405,7 @@ export function buildDeckRedraftPrompt(input: {
 }
 
 export function buildEvalPrompt(input: {
-  deck: Pick<Deck, "title" | "team" | "audience" | "brief" | "contextDoc">;
+  deck: Pick<Deck, "title" | "team" | "audience" | "brief" | "contextDocs">;
   slides: Slide[];
   chatHistory: ChatMessage[];
 }): string {
@@ -428,11 +435,11 @@ export function buildEvalPrompt(input: {
         ].join("\n")
       : "";
   return [
-    "You are Valon's deck reviewer. Judge two things: whether this drafted deck follows the required tone, and whether its claims are grounded in the brief, the reference document, and the user's instructions. Flag only clear, material violations; do not flag reasonable stylistic choices that a competent writer could defend. Be specific; vague praise helps no one.",
+    "You are Valon's deck reviewer. Judge two things: whether this drafted deck follows the required tone, and whether its claims are grounded in the brief, the reference documents, and the user's instructions. Flag only clear, material violations; do not flag reasonable stylistic choices that a competent writer could defend. Be specific; vague praise helps no one.",
     "",
     `Deck: "${input.deck.title}" (team: ${input.deck.team}, audience: ${input.deck.audience}).`,
     `Brief: ${input.deck.brief}`,
-    contextDocBlock(input.deck.contextDoc),
+    contextDocsBlock(input.deck.contextDocs),
     userInstructionsBlock,
     "",
     toneBlock(tone),

@@ -132,6 +132,11 @@ export type ChatMessage = {
 
 export const CONTEXT_DOC_CHAR_CAP = 40_000;
 
+// Up to three reference documents per deck. Each is capped individually
+// at CONTEXT_DOC_CHAR_CAP; the count is re-enforced server-side in the
+// prompt builder alongside the per-document text cap.
+export const MAX_CONTEXT_DOCS = 3;
+
 export type ContextDoc = {
   filename: string;
   text: string;
@@ -148,7 +153,7 @@ export type Deck = {
   audience: Audience;
   brief: string;
   targetLength: number; // number of slides at draft time
-  contextDoc: ContextDoc | null;
+  contextDocs: ContextDoc[]; // up to MAX_CONTEXT_DOCS reference documents
   templateId: string | null; // e.g. "investor-update" or null for blank/custom
   slides: Slide[];
   chatHistory: ChatMessage[]; // full multi-turn history for this deck
@@ -170,7 +175,7 @@ export type EvalRun = {
   id: string;
   deckId: string;
   deckTitle: string;
-  contextFilename: string | null;
+  contextFilenames: string[];
   trigger: "draft" | "redraft";
   verdict: EvalVerdict;
   findings: EvalFinding[];
@@ -185,7 +190,7 @@ export type DraftDeckRequest = {
   audience: Audience;
   // null = freeform: the model sizes the deck from the brief.
   targetLength: number | null;
-  contextDoc: ContextDoc | null;
+  contextDocs: ContextDoc[];
   templateId?: string | null;
   // Custom (user-saved) templates live in the browser's localStorage,
   // which the server cannot see, so the full outline travels in the
@@ -202,7 +207,7 @@ export type DraftDeckResponse = {
 };
 
 export type RedraftSlideRequest = {
-  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDoc">;
+  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDocs">;
   slide: Slide;
   slideNumber: number;
   totalSlides: number;
@@ -219,7 +224,7 @@ export type RedraftSlideResponse = {
 };
 
 export type RedraftDeckRequest = {
-  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDoc">;
+  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDocs">;
   slides: Slide[];
   instruction: string;
   chatHistory: ChatMessage[];
@@ -232,7 +237,7 @@ export type RedraftDeckResponse = {
 };
 
 export type EvalRequest = {
-  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDoc">;
+  deck: Pick<Deck, "id" | "title" | "team" | "audience" | "brief" | "contextDocs">;
   slides: Slide[];
   // Grounding sources include facts the user stated or confirmed in chat,
   // so the reviewer needs the conversation to judge them.

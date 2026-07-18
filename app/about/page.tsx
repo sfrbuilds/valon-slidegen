@@ -54,7 +54,7 @@ export default function AboutPage() {
           features={[
             {
               name: "First draft from a brief",
-              text: "A paragraph or two in, a full presentation out. Attach a reference document (PDF, DOCX, TXT, MD) and the draft is grounded in it.",
+              text: "A paragraph or two in, a full presentation out. Attach up to three reference documents (PDF, DOCX, TXT, MD) and the draft is grounded in it.",
             },
             {
               name: "Templates for common formats",

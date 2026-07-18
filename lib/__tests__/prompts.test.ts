@@ -13,7 +13,7 @@ const base = {
   brief: "CEO update. 6 slides: slide 1 the quarter, slide 2 the numbers.",
   team: "executive-board" as const,
   audience: "internal" as const,
-  contextDoc: null,
+  contextDocs: [],
 };
 
 describe("buildDraftPrompt length guidance", () => {
@@ -57,7 +57,7 @@ describe("factual grounding rules", () => {
     brief: base.brief,
     team: base.team,
     audience: base.audience,
-    contextDoc: null,
+    contextDocs: [],
   };
 
   it("ban unsupported qualitative claims, not just invented numbers", () => {
@@ -114,7 +114,7 @@ describe("buildEvalPrompt review scope", () => {
     brief: base.brief,
     team: base.team,
     audience: base.audience,
-    contextDoc: null,
+    contextDocs: [],
   };
   const slides: Slide[] = [
     {
@@ -146,17 +146,40 @@ describe("buildEvalPrompt review scope", () => {
     const prompt = buildEvalPrompt({
       deck: {
         ...deck,
-        contextDoc: {
-          filename: "q2-metrics.txt",
-          text: "Quarterly ARR: 19, 21.5, 23, 25 ($M)",
-          truncated: false,
-          uploadedAt: "2026-07-16T00:00:00.000Z",
-        },
+        contextDocs: [
+          {
+            filename: "q2-metrics.txt",
+            text: "Quarterly ARR: 19, 21.5, 23, 25 ($M)",
+            truncated: false,
+            uploadedAt: "2026-07-16T00:00:00.000Z",
+          },
+        ],
       },
       slides,
       chatHistory: [],
     });
     expect(prompt).toContain("Quarterly ARR: 19, 21.5, 23, 25 ($M)");
+  });
+
+  it("numbers multiple reference documents and drops any beyond the cap", () => {
+    const doc = (n: number) => ({
+      filename: `doc-${n}.txt`,
+      text: `Content of document ${n}`,
+      truncated: false,
+      uploadedAt: "2026-07-16T00:00:00.000Z",
+    });
+    const prompt = buildEvalPrompt({
+      // Four docs sent; the prompt builder re-enforces the cap of three
+      // at the trust boundary, same as the per-document text cap.
+      deck: { ...deck, contextDocs: [doc(1), doc(2), doc(3), doc(4)] },
+      slides,
+      chatHistory: [],
+    });
+    expect(prompt).toContain('Reference document 1 of 3 ("doc-1.txt")');
+    expect(prompt).toContain('Reference document 3 of 3 ("doc-3.txt")');
+    expect(prompt).toContain("Content of document 3");
+    expect(prompt).not.toContain("doc-4.txt");
+    expect(prompt).not.toContain("Content of document 4");
   });
 
   it("includes user chat messages as grounding sources, never assistant ones", () => {

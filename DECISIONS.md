@@ -101,7 +101,7 @@ because each one capped everything built on top of it:
   - A live test showed the model charting [19, 21, 23, 25] as real data
     when the brief contained only the 25. So the model's claim is
     treated as a hint: `lib/chart-grounding.ts` checks every plotted
-    value against the numbers in the brief, reference document, and the
+    value against the numbers in the brief, reference documents, and the
     user's own chat messages, and overrides any chart that fails to
     illustrative before the response leaves the route.
   - Assistant messages are excluded as a source, so model-invented

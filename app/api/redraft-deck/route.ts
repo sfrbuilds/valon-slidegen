@@ -44,7 +44,9 @@ export async function POST(req: Request) {
         brief: body.deck.brief,
         team: body.deck.team,
         audience: body.deck.audience,
-        contextDoc: body.deck.contextDoc,
+        contextDocs: Array.isArray(body.deck.contextDocs)
+          ? body.deck.contextDocs
+          : [],
       },
       slides: body.slides,
       instruction: body.instruction,
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
     // numbers cannot ground themselves on a later turn.
     const sourceText = [
       body.deck.brief,
-      body.deck.contextDoc?.text ?? "",
+      ...promptInput.deck.contextDocs.map((d) => d.text),
       body.instruction,
       ...body.chatHistory.filter((m) => m.role === "user").map((m) => m.content),
     ].join("\n");

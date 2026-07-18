@@ -20,6 +20,7 @@ import {
   TEAM_LABELS,
   AUDIENCE_LABELS,
   CONTEXT_DOC_CHAR_CAP,
+  MAX_CONTEXT_DOCS,
   makeId,
   nowIso,
   type Team,
@@ -43,7 +44,7 @@ export function NewPresentationForm() {
   // "6 slides: slide 1..., slide 2..." should never have that concept
   // bulldozed by a forced count; explicit counts are opt-in.
   const [targetLength, setTargetLength] = useState<number | null>(null);
-  const [contextDoc, setContextDoc] = useState<ContextDoc | null>(null);
+  const [contextDocs, setContextDocs] = useState<ContextDoc[]>([]);
   const [templateId, setTemplateId] = useState<string>(BLANK_TEMPLATE_ID);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,35 +70,54 @@ export function NewPresentationForm() {
     }
   }
 
-  async function handleFile(file: File) {
+  async function extractDoc(file: File): Promise<ContextDoc> {
+    let text = "";
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      const arrayBuffer = await file.arrayBuffer();
+      const { extractText, getDocumentProxy } = await import("unpdf");
+      const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+      const { text: pages } = await extractText(pdf, { mergePages: true });
+      text = Array.isArray(pages) ? pages.join("\n\n") : pages;
+    } else if (
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.name.endsWith(".docx")
+    ) {
+      const arrayBuffer = await file.arrayBuffer();
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+    } else {
+      text = await file.text();
+    }
+    const truncated = text.length > CONTEXT_DOC_CHAR_CAP;
+    return {
+      filename: file.name,
+      text: text.slice(0, CONTEXT_DOC_CHAR_CAP),
+      truncated,
+      uploadedAt: nowIso(),
+    };
+  }
+
+  async function handleFiles(files: File[]) {
     setError(null);
+    const room = MAX_CONTEXT_DOCS - contextDocs.length;
+    if (files.length > room) {
+      setError(
+        `Up to ${MAX_CONTEXT_DOCS} reference documents are supported; ${room === 0 ? "remove one first" : `only the first ${room} of these will be added`}.`
+      );
+    }
     try {
-      let text = "";
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        const arrayBuffer = await file.arrayBuffer();
-        const { extractText, getDocumentProxy } = await import("unpdf");
-        const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
-        const { text: pages } = await extractText(pdf, { mergePages: true });
-        text = Array.isArray(pages) ? pages.join("\n\n") : pages;
-      } else if (
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-        file.name.endsWith(".docx")
-      ) {
-        const arrayBuffer = await file.arrayBuffer();
-        const mammoth = await import("mammoth");
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        text = result.value;
-      } else {
-        text = await file.text();
+      const extracted = await Promise.all(
+        files.slice(0, room).map((f) => extractDoc(f))
+      );
+      if (extracted.length > 0) {
+        // Re-uploading a file with the same name replaces it in place.
+        setContextDocs((prev) => [
+          ...prev.filter((d) => !extracted.some((e) => e.filename === d.filename)),
+          ...extracted,
+        ]);
       }
-      const truncated = text.length > CONTEXT_DOC_CHAR_CAP;
-      setContextDoc({
-        filename: file.name,
-        text: text.slice(0, CONTEXT_DOC_CHAR_CAP),
-        truncated,
-        uploadedAt: nowIso(),
-      });
     } catch (e) {
       setError(`Could not read file: ${(e as Error).message}`);
     }
@@ -116,7 +136,7 @@ export function NewPresentationForm() {
         team,
         audience,
         targetLength,
-        contextDoc,
+        contextDocs,
         templateId: templateId === BLANK_TEMPLATE_ID ? null : templateId,
         // Custom templates only exist in this browser's storage, so the
         // server gets the whole outline, not just an id it cannot resolve.
@@ -140,7 +160,7 @@ export function NewPresentationForm() {
         brief: brief.trim(),
         // Auto mode has no requested count; record what was drafted.
         targetLength: targetLength ?? data.slides.length,
-        contextDoc,
+        contextDocs,
         templateId: templateId === BLANK_TEMPLATE_ID ? null : templateId,
         slides: data.slides,
         // A non-fatal draft warning (e.g. requested chart missing after a
@@ -390,32 +410,42 @@ export function NewPresentationForm() {
             className="eyebrow"
             style={{ display: "block", marginBottom: 10 }}
           >
-            Reference document (optional)
+            Reference documents (optional, up to {MAX_CONTEXT_DOCS})
           </label>
-          {contextDoc ? (
+          {contextDocs.map((doc) => (
             <div
+              key={doc.filename}
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "10px 14px",
+                marginBottom: 8,
                 background: "var(--paper-warm-2)",
                 borderRadius: "var(--radius-md)",
                 border: "1px solid var(--ink-100)",
               }}
             >
               <div>
-                <div className="body-md">{contextDoc.filename}</div>
+                <div className="body-md">{doc.filename}</div>
                 <div className="body-sm">
-                  {contextDoc.text.length.toLocaleString()} characters
-                  {contextDoc.truncated ? " (truncated)" : ""}
+                  {doc.text.length.toLocaleString()} characters
+                  {doc.truncated ? " (truncated)" : ""}
                 </div>
               </div>
-              <Button variant="ghost" onClick={() => setContextDoc(null)}>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  setContextDocs((prev) =>
+                    prev.filter((d) => d.filename !== doc.filename)
+                  )
+                }
+              >
                 Remove
               </Button>
             </div>
-          ) : (
+          ))}
+          {contextDocs.length < MAX_CONTEXT_DOCS && (
             <label
               style={{
                 display: "block",
@@ -430,13 +460,18 @@ export function NewPresentationForm() {
               <input
                 type="file"
                 accept=".pdf,.docx,.txt,.md"
+                multiple
                 style={{ display: "none" }}
                 onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFile(f);
+                  const files = Array.from(e.target.files ?? []);
+                  if (files.length > 0) handleFiles(files);
+                  // Allow re-selecting the same file after a remove.
+                  e.target.value = "";
                 }}
               />
-              Click to upload PDF, DOCX, TXT, or MD
+              {contextDocs.length === 0
+                ? "Click to upload PDF, DOCX, TXT, or MD"
+                : "Add another document"}
             </label>
           )}
         </div>
@@ -470,8 +505,8 @@ export function NewPresentationForm() {
               </div>
               <StagedProgress
                 stages={[
-                  contextDoc
-                    ? `Reading your brief and ${contextDoc.filename}`
+                  contextDocs.length > 0
+                    ? `Reading your brief and ${contextDocs.length === 1 ? contextDocs[0].filename : `${contextDocs.length} reference documents`}`
                     : "Reading your brief",
                   `Applying the ${tone.name} tone`,
                   selectedTemplate

@@ -25,7 +25,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     audience: "internal",
     brief: "Quarterly pipeline review",
     targetLength: 3,
-    contextDoc: null,
+    contextDocs: [],
     templateId: null,
     slides: [
       makeSlide({ id: "s1", layout: "title", heading: "Q3 2026 Pipeline Review", subheading: "GTM quarterly" }),

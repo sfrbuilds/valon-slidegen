@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       team: body.team,
       audience: body.audience,
       targetLength: body.targetLength ?? null,
-      contextDoc: body.contextDoc ?? null,
+      contextDocs: Array.isArray(body.contextDocs) ? body.contextDocs : [],
       templateId: body.templateId ?? null,
       customTemplate,
     };
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     // value against the text the user actually provided.
     const grounded = enforceChartGrounding(
       parsed.value.slides,
-      `${body.brief}\n${body.contextDoc?.text ?? ""}`
+      [body.brief, ...promptInput.contextDocs.map((d) => d.text)].join("\n")
     );
 
     const response: DraftDeckResponse = {

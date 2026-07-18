@@ -47,7 +47,7 @@ npm test            # vitest unit tests on the pure lib/ layer
 
 ## Features
 
-- **Draft from a brief**: team, audience, optional reference document
+- **Draft from a brief**: team, audience, up to three optional reference documents
   (PDF / DOCX / TXT / MD), optional template. Eight tone profiles, one per
   team x audience pair, previewable at setup.
 - **Eight deck templates** with slide-by-slide outlines (Investor Update,
@@ -63,12 +63,12 @@ npm test            # vitest unit tests on the pure lib/ layer
   objects. When the model fabricates numbers it must set
   `isDummyData: true`, which renders a visible "Illustrative data" chip on
   screen and in the export; claimed-real values are verified against the
-  brief, reference document, and the user's chat messages
+  brief, reference documents, and the user's chat messages
   (`lib/chart-grounding.ts`) and overridden to illustrative when
   ungrounded.
 - **Review on demand**: a reviewer pass that judges every slide against
   the deck's tone rules and a factual-grounding rubric (company-specific
-  claims must be supported by the brief, reference document, or the
+  claims must be supported by the brief, reference documents, or the
   user's chat messages), returning a pass / needs-revision verdict and
   findings tied to slide numbers. On-demand by design, so drafting stays
   fast. "Fix findings" runs one bounded repair pass (smallest edit per

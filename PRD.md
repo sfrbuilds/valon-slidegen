@@ -99,7 +99,7 @@ Each feature lists what it does, then its acceptance criteria.
   input should brief the tool the way you would brief a colleague
   (purpose, audience, key figures, the ask), not just trigger it. The
   clearer the brief, the better the draft.
-- User provides a brief, team, and audience; optional reference document
+- User provides a brief, team, and audience; up to three optional reference documents
   (PDF/DOCX/TXT/MD), template, and slide count.
 - *Accepts:*
   - A complete deck renders in the workspace.
@@ -152,7 +152,7 @@ Each feature lists what it does, then its acceptance criteria.
   briefs close with framed options and placeholders, never an invented
   rationale.
 - Chart values claimed as real are mechanically verified against the
-  brief, reference document, and the user's own chat messages, and
+  brief, reference documents, and the user's own chat messages, and
   overridden to illustrative when ungrounded: a deliberately conservative
   numeric provenance guard, not semantic grounding.
 - *Accepts:*
@@ -164,7 +164,7 @@ Each feature lists what it does, then its acceptance criteria.
 **Review (internal name: eval)**
 - On-demand pass judging every slide against the deck's tone rules and
   the grounding rubric: company-specific claims must be supported by the
-  brief, the reference document, or the user's own chat messages.
+  brief, the reference documents, or the user's own chat messages.
 - Verdict is pass / needs-revision; findings quote offending copy and
   jump to the slide.
 - "Fix findings" runs one bounded minimal-edit pass (off-tone copy

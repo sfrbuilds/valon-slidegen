@@ -29,7 +29,9 @@ export async function POST(req: Request) {
         team: body.deck.team,
         audience: body.deck.audience,
         brief: body.deck.brief,
-        contextDoc: body.deck.contextDoc,
+        contextDocs: Array.isArray(body.deck.contextDocs)
+          ? body.deck.contextDocs
+          : [],
       },
       slides: body.slides,
       // Tolerate older clients that omit it; grounding then judges
@@ -63,7 +65,9 @@ export async function POST(req: Request) {
         id: makeId("eval"),
         deckId: body.deck.id,
         deckTitle: body.deck.title,
-        contextFilename: body.deck.contextDoc?.filename ?? null,
+        contextFilenames: Array.isArray(body.deck.contextDocs)
+          ? body.deck.contextDocs.map((d) => d.filename)
+          : [],
         trigger: body.trigger,
         verdict: parsed.value.verdict,
         findings: parsed.value.findings,

@@ -44,6 +44,18 @@ function readStore(): StoredShape {
     if (typeof parsed.templates !== "object" || parsed.templates === null) {
       parsed.templates = {};
     }
+    // Decks written before multi-document support carry a single
+    // `contextDoc` (object or null) instead of `contextDocs`. Normalize
+    // on read so the rest of the app only ever sees the array shape.
+    for (const deck of Object.values(parsed.decks)) {
+      if (!Array.isArray(deck.contextDocs)) {
+        const legacy = (deck as unknown as { contextDoc?: unknown }).contextDoc;
+        deck.contextDocs =
+          legacy && typeof legacy === "object"
+            ? [legacy as Deck["contextDocs"][number]]
+            : [];
+      }
+    }
     return parsed;
   } catch {
     return { version: 1, decks: {}, templates: {} };

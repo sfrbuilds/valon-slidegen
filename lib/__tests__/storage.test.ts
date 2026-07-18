@@ -24,7 +24,7 @@ function makeDeck(id: string, overrides: Partial<Deck> = {}): Deck {
     audience: "internal",
     brief: "brief",
     targetLength: 3,
-    contextDoc: null,
+    contextDocs: [],
     templateId: null,
     slides: [{ id: "s1", layout: "content", heading: "h", bullets: [] }],
     chatHistory: [],
@@ -144,6 +144,26 @@ describe("localStorageAdapter custom templates", () => {
     expect(localStorageAdapter.saveTemplate(makeTemplate("custom_a"))).toBe(true);
     expect(localStorageAdapter.getDeck("d1")?.id).toBe("d1");
     expect(localStorageAdapter.getTemplates()).toHaveLength(1);
+  });
+
+  it("migrates decks written before multi-document support", () => {
+    const data = stubLocalStorage();
+    const legacyDoc = {
+      filename: "old.txt",
+      text: "legacy reference",
+      truncated: false,
+      uploadedAt: "2026-07-01T00:00:00.000Z",
+    };
+    // Pre-migration decks carry `contextDoc` (object or null), never
+    // `contextDocs`. Both shapes must normalize to the array.
+    const withDoc = { ...makeDeck("d1"), contextDocs: undefined, contextDoc: legacyDoc };
+    const withNull = { ...makeDeck("d2"), contextDocs: undefined, contextDoc: null };
+    data.set(
+      "valon-slidegen-v0",
+      JSON.stringify({ version: 1, decks: { d1: withDoc, d2: withNull }, templates: {} })
+    );
+    expect(localStorageAdapter.getDeck("d1")?.contextDocs).toEqual([legacyDoc]);
+    expect(localStorageAdapter.getDeck("d2")?.contextDocs).toEqual([]);
   });
 
   it("keeps decks and templates in separate namespaces", () => {
