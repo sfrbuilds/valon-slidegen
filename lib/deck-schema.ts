@@ -41,6 +41,22 @@ export function stripCodeFences(raw: string): string {
   return text.trim();
 }
 
+/**
+ * Strip inline markdown the model sometimes emits despite the plain-text
+ * rule in the prompts ("**Expand Market Reach:**" rendered literally in
+ * the preview and the .pptx). Paired emphasis markers and heading
+ * prefixes are removed; lone asterisks in real copy are left alone.
+ */
+export function stripInlineMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1") // **bold**
+    .replace(/__(.+?)__/g, "$1") // __bold__
+    .replace(/`([^`]+)`/g, "$1") // `code`
+    .replace(/^#{1,6}\s+/, "") // "# Heading" prefix
+    .replace(/^[-*]\s+/, "") // "- bullet" prefix inside a bullet string
+    .trim();
+}
+
 export type DraftedSlide = {
   layout: SlideLayout;
   heading: string;
@@ -118,7 +134,7 @@ export function parseDeckDraft(raw: string): ParseResult<DraftedDeck> {
   }
   const p = parsed as Record<string, unknown>;
   const deckTitle = typeof p.deckTitle === "string" && p.deckTitle.trim()
-    ? p.deckTitle.trim()
+    ? stripInlineMarkdown(p.deckTitle)
     : "Untitled deck";
   if (!Array.isArray(p.slides) || p.slides.length === 0) {
     return { ok: false, error: "Response has no slides array." };
@@ -130,11 +146,13 @@ export function parseDeckDraft(raw: string): ParseResult<DraftedDeck> {
       return { ok: false, error: `Slide ${i + 1} has invalid layout "${String(s.layout)}"` };
     }
     const heading = typeof s.heading === "string" && s.heading.trim()
-      ? s.heading.trim()
+      ? stripInlineMarkdown(s.heading)
       : "Untitled slide";
-    const subheading = typeof s.subheading === "string" ? s.subheading.trim() : undefined;
+    const subheading = typeof s.subheading === "string" ? stripInlineMarkdown(s.subheading) : undefined;
     const bullets = Array.isArray(s.bullets)
-      ? (s.bullets as unknown[]).filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+      ? (s.bullets as unknown[])
+          .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+          .map(stripInlineMarkdown)
       : [];
     const imageIdea = typeof s.imageIdea === "string" ? s.imageIdea.trim() : undefined;
     const chartData = parseChartData(s.chartData);
@@ -161,11 +179,13 @@ export function parseSlideRedraft(
     return { ok: false, error: "Response is missing a valid slide object." };
   }
   const heading = typeof slideRaw.heading === "string" && slideRaw.heading.trim()
-    ? slideRaw.heading.trim()
+    ? stripInlineMarkdown(slideRaw.heading)
     : "Untitled slide";
-  const subheading = typeof slideRaw.subheading === "string" ? slideRaw.subheading.trim() : undefined;
+  const subheading = typeof slideRaw.subheading === "string" ? stripInlineMarkdown(slideRaw.subheading) : undefined;
   const bullets = Array.isArray(slideRaw.bullets)
-    ? (slideRaw.bullets as unknown[]).filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+    ? (slideRaw.bullets as unknown[])
+        .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+        .map(stripInlineMarkdown)
     : [];
   const imageIdea = typeof slideRaw.imageIdea === "string" ? slideRaw.imageIdea.trim() : undefined;
   const chartData = parseChartData(slideRaw.chartData);
@@ -207,11 +227,13 @@ export function parseDeckRedraft(
       return { ok: false, error: `Slide ${i + 1} has invalid layout "${String(s.layout)}"` };
     }
     const heading = typeof s.heading === "string" && s.heading.trim()
-      ? s.heading.trim()
+      ? stripInlineMarkdown(s.heading)
       : "Untitled slide";
-    const subheading = typeof s.subheading === "string" ? s.subheading.trim() : undefined;
+    const subheading = typeof s.subheading === "string" ? stripInlineMarkdown(s.subheading) : undefined;
     const bullets = Array.isArray(s.bullets)
-      ? (s.bullets as unknown[]).filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+      ? (s.bullets as unknown[])
+          .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+          .map(stripInlineMarkdown)
       : [];
     const imageIdea = typeof s.imageIdea === "string" ? s.imageIdea.trim() : undefined;
     const chartData = parseChartData(s.chartData);

@@ -113,6 +113,7 @@ Rules for the shape:
 - For multi-slide decks, the first slide must use the "title" layout, and "section" should appear sparingly as a divider or closer.
 - For a single-slide deck, use the "content" layout with the actual message (heading plus 2-5 bullets). Do not use "title" for a one-slide deck.
 - Content slides carry 2-5 tight bullets. Never paragraph-length bullets.
+- Every text field is plain text. No markdown syntax anywhere: no **bold**, no _italics_, no backticks, no "#" heading prefixes, no leading "-" inside bullet strings. Emphasis comes from the slide design, not from markup.
 - When the brief culminates in a decision or approval ask, close with a decision slide that does real work: name the decision, frame the options, and carry bracketed placeholders for whatever the brief did not provide (investment required, expected return, supporting evidence, key risks). A bare "decision required" heading is too thin.
 - Add "imageIdea" only where supporting imagery genuinely helps (roughly a third of content slides): a short prompt for an abstract, editorial illustration. Never propose text, charts with numbers, screenshots, or people's faces in the imageIdea.
 
@@ -135,6 +136,7 @@ Rules:
 - If chartData is fabricated (numbers not given in the brief or context doc), you MUST set isDummyData to true so the UI marks it as illustrative.
 - If the slide currently has chartData or an imageIdea and the instruction does not concern it, return it unchanged.
 - If the user asks to REMOVE the chart, return the slide with chartData set to null. If the user asks to REMOVE the image, return the slide with imageIdea set to null. Say so in the editSummary.
+- Every text field is plain text: no markdown syntax such as **bold** or "#" prefixes.
 - editSummary is a single sentence, plain language, describing the specific edit (what changed, why). Not a restatement of the instruction. Do not overstate what was done.
 `.trim();
 
@@ -152,6 +154,7 @@ Rules:
 - Apply the instruction wherever it is relevant; leave everything else untouched. Do not rewrite slides gratuitously.
 - Preserve each slide's existing chartData and imageIdea unless the instruction concerns them. If the user asks to remove a chart or image, set that field to null on the relevant slide(s).
 - If chartData is fabricated (numbers not given in the brief or context doc), set isDummyData to true.
+- Every text field is plain text: no markdown syntax such as **bold** or "#" prefixes.
 - editSummary is a single sentence, plain language, describing the deck-wide edit. Do not overstate what was done.
 `.trim();
 

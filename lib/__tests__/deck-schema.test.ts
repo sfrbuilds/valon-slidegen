@@ -199,6 +199,56 @@ describe("parseDeckDraft", () => {
   });
 });
 
+describe("markdown stripping at the boundary", () => {
+  it("removes inline markdown the model emits despite the plain-text rule", () => {
+    const raw = JSON.stringify({
+      deckTitle: "**Q3 Board Read**",
+      slides: [
+        {
+          layout: "content",
+          heading: "## Strategic Priorities",
+          subheading: "__Our focus areas__",
+          bullets: [
+            "**Expand Market Reach:** Secure new enterprise clients.",
+            "- Deploy `feature-x` to deliver efficiency gains.",
+          ],
+        },
+      ],
+    });
+    const result = parseDeckDraft(raw);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.deckTitle).toBe("Q3 Board Read");
+    const slide = result.value.slides[0];
+    expect(slide.heading).toBe("Strategic Priorities");
+    expect(slide.subheading).toBe("Our focus areas");
+    expect(slide.bullets[0]).toBe(
+      "Expand Market Reach: Secure new enterprise clients."
+    );
+    expect(slide.bullets[1]).toBe("Deploy feature-x to deliver efficiency gains.");
+  });
+
+  it("leaves legitimate lone asterisks and hyphens alone", () => {
+    const raw = JSON.stringify({
+      deckTitle: "Deck",
+      slides: [
+        {
+          layout: "content",
+          heading: "Results",
+          bullets: ["Growth of 40%* (*excluding one-time items)", "Year-over-year gains"],
+        },
+      ],
+    });
+    const result = parseDeckDraft(raw);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.slides[0].bullets[0]).toBe(
+      "Growth of 40%* (*excluding one-time items)"
+    );
+    expect(result.value.slides[0].bullets[1]).toBe("Year-over-year gains");
+  });
+});
+
 describe("parseSlideRedraft", () => {
   it("parses a valid redraft", () => {
     const raw = JSON.stringify({

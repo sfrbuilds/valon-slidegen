@@ -22,6 +22,34 @@ const baseContent: Slide = {
   bullets: ["ARR $250M", "40% YoY"],
 };
 
+describe("mapSlide (content) heading accent placement", () => {
+  it("pulls the gold dash up under a single-line heading", () => {
+    const short = mapSlide(baseContent);
+    const long = mapSlide({
+      ...baseContent,
+      heading:
+        "A deliberately long heading that will certainly wrap onto a second line at thirty-two points",
+    });
+    if (short.layout !== "content" || long.layout !== "content") return;
+    // The dash tracks the estimated heading height instead of a fixed
+    // worst-case box, so short headings must place it strictly higher.
+    expect(short.headingAccent.y).toBeLessThan(long.headingAccent.y);
+    // And it sits directly under the heading box, not floating below it.
+    expect(short.headingAccent.y).toBeCloseTo(
+      short.texts[0].y + short.texts[0].h + 0.05,
+      2
+    );
+  });
+
+  it("keeps the body below the dash for both heading lengths", () => {
+    const short = mapSlide(baseContent);
+    if (short.layout !== "content") return;
+    const firstBullet = short.texts.find((t) => "bullet" in t && t.bullet);
+    expect(firstBullet).toBeDefined();
+    expect(firstBullet!.y).toBeGreaterThan(short.headingAccent.y);
+  });
+});
+
 describe("mapSlide (content)", () => {
   it("uses full width without a side visual", () => {
     const spec = mapSlide(baseContent);

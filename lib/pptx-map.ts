@@ -88,16 +88,35 @@ function renderSectionSlide(slide: Slide) {
   };
 }
 
+/**
+ * Estimate how many lines a heading will wrap to at 32pt in a box of the
+ * given width, so the gold dash can sit directly under the actual text
+ * instead of under a worst-case two-line box (which left a visible dead
+ * zone under every single-line heading). The estimate is deliberately
+ * conservative (undercounts characters per line) so a borderline heading
+ * gets the taller box rather than overflowing onto the dash.
+ */
+function estimateHeadingLines(heading: string, widthInches: number): number {
+  // ~32pt sans: conservative average glyph width of ~16pt = 4.5 chars
+  // per inch of box width.
+  const charsPerLine = Math.floor(widthInches * 4.5);
+  return Math.min(3, Math.max(1, Math.ceil(heading.length / charsPerLine)));
+}
+
 // Layout: content
 function renderContentSlide(slide: Slide) {
   const hasChart = Boolean(slide.chartData);
   const hasImage = Boolean(slide.imageData) && !hasChart;
   const hasSideVisual = hasChart || hasImage;
   const contentWidth = hasSideVisual ? 6.7 : 11.83;
-  // Heading gets a generous box so 2-line titles don't overflow onto the dash.
+  // The heading box hugs the estimated text height; the dash and body
+  // are placed relative to it, so a single-line heading pulls the whole
+  // slide body up instead of leaving a gap under the headline.
   const HEADING_Y = 0.55;
-  const HEADING_H = 1.6;
-  const HEADING_ACCENT_Y = HEADING_Y + HEADING_H + 0.05; // 2.20
+  const HEADING_LINE_H = 0.55;
+  const HEADING_H =
+    0.1 + estimateHeadingLines(slide.heading, contentWidth) * HEADING_LINE_H;
+  const HEADING_ACCENT_Y = HEADING_Y + HEADING_H + 0.05;
   const HEADING_ACCENT_H = 0.05;
   const bodyTop = slide.subheading
     ? HEADING_ACCENT_Y + 0.55
