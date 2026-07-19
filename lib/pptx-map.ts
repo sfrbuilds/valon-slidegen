@@ -13,6 +13,13 @@ const SLIDE_H = 7.5;
 
 // Layout: title
 function renderTitleSlide(slide: Slide) {
+  // 50pt line is ~0.8in; stack the subtitle and dash under the actual
+  // heading height so a wrapping title never crowds them.
+  const headingLines = estimateLines(slide.heading, 11.83, 50, 3);
+  const headingH = 0.1 + headingLines * 0.8;
+  const headingY = headingLines > 2 ? 2.2 : 2.8;
+  const subY = headingY + headingH + 0.1;
+  const dashY = subY + (slide.subheading ? 0.95 : 0.2);
   return {
     layout: "title" as const,
     background: BRAND.colors.paperWhite,
@@ -20,9 +27,9 @@ function renderTitleSlide(slide: Slide) {
       {
         text: slide.heading,
         x: 0.75,
-        y: 2.8,
+        y: headingY,
         w: 11.83,
-        h: 1.5,
+        h: headingH,
         fontFace: BRAND.pptxFonts.sans,
         fontSize: 50,
         italic: false,
@@ -35,7 +42,7 @@ function renderTitleSlide(slide: Slide) {
             {
               text: slide.subheading,
               x: 0.75,
-              y: 4.4,
+              y: subY,
               w: 11.83,
               h: 0.8,
               fontFace: BRAND.pptxFonts.sans,
@@ -50,7 +57,7 @@ function renderTitleSlide(slide: Slide) {
     ],
     accentBar: {
       x: 0.75,
-      y: 5.4,
+      y: dashY,
       w: 0.6,
       h: 0.06,
       fill: BRAND.colors.accent.replace("#", ""),
@@ -89,18 +96,22 @@ function renderSectionSlide(slide: Slide) {
 }
 
 /**
- * Estimate how many lines a heading will wrap to at 32pt in a box of the
- * given width, so the gold dash can sit directly under the actual text
- * instead of under a worst-case two-line box (which left a visible dead
- * zone under every single-line heading). The estimate is deliberately
- * conservative (undercounts characters per line) so a borderline heading
- * gets the taller box rather than overflowing onto the dash.
+ * Estimate how many lines a text run wraps to at a given font size in a
+ * box of the given width. Average glyph width is taken as 0.62x the font
+ * size, calibrated against real exports (a 32pt heading wraps at about
+ * 3.8 characters per inch). Deliberately conservative: a borderline text
+ * gets the taller box, because an overestimated box costs whitespace
+ * while an underestimated one prints boxes over each other.
  */
-function estimateHeadingLines(heading: string, widthInches: number): number {
-  // ~32pt sans: conservative average glyph width of ~16pt = 4.5 chars
-  // per inch of box width.
-  const charsPerLine = Math.floor(widthInches * 4.5);
-  return Math.min(3, Math.max(1, Math.ceil(heading.length / charsPerLine)));
+function estimateLines(
+  text: string,
+  widthInches: number,
+  fontSizePt: number,
+  maxLines: number
+): number {
+  const charWidthPt = 0.62 * fontSizePt;
+  const charsPerLine = Math.max(8, Math.floor((widthInches * 72) / charWidthPt));
+  return Math.min(maxLines, Math.max(1, Math.ceil(text.length / charsPerLine)));
 }
 
 // Layout: content
@@ -115,15 +126,26 @@ function renderContentSlide(slide: Slide) {
   const HEADING_Y = 0.55;
   const HEADING_LINE_H = 0.55;
   const HEADING_H =
-    0.1 + estimateHeadingLines(slide.heading, contentWidth) * HEADING_LINE_H;
+    0.1 + estimateLines(slide.heading, contentWidth, 32, 3) * HEADING_LINE_H;
   const HEADING_ACCENT_Y = HEADING_Y + HEADING_H + 0.05;
   const HEADING_ACCENT_H = 0.05;
   const bodyTop = slide.subheading
     ? HEADING_ACCENT_Y + 0.55
     : HEADING_ACCENT_Y + 0.35;
-  // Sized for a room, not a laptop: 18pt body needs a taller row.
-  const bulletStep = 0.72;
-  const bulletRowHeight = 0.62;
+  // Bullets stack cumulatively: each row is sized from its own estimated
+  // wrap count (18pt line is ~0.34in), so a three-line bullet pushes the
+  // next bullet down instead of printing over it (the fixed 0.72in step
+  // assumed single-line bullets and overlapped on wordy decks).
+  const BULLET_LINE_H = 0.34;
+  const BULLET_GAP = 0.14;
+  let bulletY = bodyTop;
+  const bulletBoxes = slide.bullets.map((bullet) => {
+    const lines = estimateLines(bullet, contentWidth - 0.3, 18, 5);
+    const h = 0.06 + lines * BULLET_LINE_H;
+    const y = bulletY;
+    bulletY += h + BULLET_GAP;
+    return { bullet, y, h };
+  });
   return {
     layout: "content" as const,
     background: BRAND.colors.paperWhite,
@@ -158,12 +180,12 @@ function renderContentSlide(slide: Slide) {
             },
           ]
         : []),
-      ...slide.bullets.map((bullet, index) => ({
+      ...bulletBoxes.map(({ bullet, y, h }) => ({
         text: bullet,
         x: 0.75,
-        y: bodyTop + index * bulletStep,
+        y,
         w: contentWidth,
-        h: bulletRowHeight,
+        h,
         fontFace: BRAND.pptxFonts.sans,
         fontSize: 18,
         color: BRAND.colors.ink700.replace("#", ""),

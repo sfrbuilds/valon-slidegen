@@ -41,6 +41,30 @@ describe("mapSlide (content) heading accent placement", () => {
     );
   });
 
+  it("stacks bullets cumulatively so wrapping bullets never overlap", () => {
+    const wordy = mapSlide({
+      ...baseContent,
+      bullets: [
+        "Risk: Increased competitive pressure in key segments. Likelihood: High. Mitigation: Accelerate feature development in differentiating areas across the platform roadmap.",
+        "Risk: New compliance requirements for mortgage servicing. Likelihood: Medium. Mitigation: Engage legal counsel and update platform architecture.",
+        "Short bullet.",
+      ],
+    });
+    if (wordy.layout !== "content") return;
+    const bullets = wordy.texts.filter((t) => "bullet" in t && t.bullet);
+    expect(bullets).toHaveLength(3);
+    // Each bullet's box must end before the next one starts: a wrapping
+    // bullet pushes its successors down instead of printing over them.
+    for (let i = 1; i < bullets.length; i++) {
+      expect(bullets[i].y).toBeGreaterThanOrEqual(
+        bullets[i - 1].y + bullets[i - 1].h
+      );
+    }
+    // And the multi-line first bullet must get a taller box than the
+    // single-line third one.
+    expect(bullets[0].h).toBeGreaterThan(bullets[2].h);
+  });
+
   it("keeps the body below the dash for both heading lengths", () => {
     const short = mapSlide(baseContent);
     if (short.layout !== "content") return;
