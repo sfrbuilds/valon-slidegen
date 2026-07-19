@@ -2087,6 +2087,15 @@ function EditableText({
 /**
  * Live slide editor. Renders the slide 16:9 and lets you click on the
  * heading, subheading, or any bullet to edit. Blur saves.
+ *
+ * WYSIWYG scale: all slide typography and spacing use cqw units
+ * (percent of canvas width) mapped from the export geometry in
+ * lib/pptx-map.ts, where the slide is 13.333in = 960pt wide. So
+ * 1pt = 100/960 = 0.104cqw: the exported 32pt heading is 3.33cqw,
+ * 18pt bullets are 1.875cqw, the 0.75in side margin is 5.6cqw.
+ * This keeps preview proportions identical to the .pptx at any
+ * window size. Editor chrome (the add-bullet button) stays in px
+ * because it does not exist on the exported slide.
  */
 function SlideEditor({
   slide,
@@ -2117,7 +2126,9 @@ function SlideEditor({
     <Card
       style={{
         aspectRatio: "16 / 9",
-        padding: "48px 56px",
+        containerType: "inline-size",
+        // Export margins: 0.55in top = 4.1cqw, 0.75in sides = 5.6cqw.
+        padding: "4.1cqw 5.6cqw",
         background:
           slide.layout === "section" ? "var(--ink-900)" : "var(--paper-white)",
         color:
@@ -2137,9 +2148,9 @@ function SlideEditor({
               fontFamily: "var(--font-sans)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
-              fontSize: "clamp(32px, 5vw, 54px)",
+              fontSize: "5.2cqw", // 50pt in the export
               lineHeight: 1.06,
-              marginBottom: 16,
+              marginBottom: "1.2cqw",
             }}
           />
           <EditableText
@@ -2149,13 +2160,13 @@ function SlideEditor({
             singleLine
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 18,
+              fontSize: "2.3cqw", // 22pt in the export
               color: "var(--ink-500)",
-              minHeight: 24,
+              minHeight: "2.6cqw",
             }}
           />
           <div style={{ flex: 1 }} />
-          <div style={{ width: 40, height: 3, background: "var(--accent)" }} />
+          <div style={{ width: "4.5cqw", height: "0.4cqw", background: "var(--accent)" }} />
         </>
       )}
 
@@ -2169,14 +2180,14 @@ function SlideEditor({
               fontFamily: "var(--font-sans)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
-              fontSize: "clamp(28px, 4.2vw, 46px)",
+              fontSize: "4.17cqw", // 40pt in the export
               lineHeight: 1.1,
               color: "var(--paper-white)",
-              marginBottom: 12,
+              marginBottom: "1cqw",
             }}
           />
           <div style={{ flex: 1 }} />
-          <div style={{ width: 40, height: 3, background: "var(--accent)" }} />
+          <div style={{ width: "4.5cqw", height: "0.4cqw", background: "var(--accent)" }} />
         </>
       )}
 
@@ -2185,36 +2196,36 @@ function SlideEditor({
           style={{
             display: "grid",
             gridTemplateColumns: hasSideVisual ? "1.1fr 1fr" : "1fr",
-            gap: 44,
+            gap: "2cqw", // 0.25in between text and visual in the export
             height: "100%",
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
             {/* Title block: heading + gold delineation dash */}
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: "2.6cqw" }}>
               <EditableText
                 value={slide.heading}
                 onChange={setHeading}
                 style={{
                   fontFamily: "var(--font-sans)",
                   fontWeight: 700,
-                  fontSize: "clamp(26px, 3vw, 38px)",
+                  fontSize: "3.33cqw", // 32pt in the export
                   lineHeight: 1.12,
                   letterSpacing: "-0.02em",
                   color: "var(--ink-900)",
-                  marginBottom: 14,
+                  marginBottom: "1cqw",
                 }}
               />
               <div
                 style={{
-                  width: 56,
-                  height: 3,
+                  width: "5.25cqw", // 0.7in dash in the export
+                  height: "0.375cqw",
                   background: "var(--accent)",
                   borderRadius: 2,
                 }}
               />
               {slide.subheading !== undefined && slide.subheading !== "" && (
-                <div style={{ marginTop: 14 }}>
+                <div style={{ marginTop: "1cqw" }}>
                   <EditableText
                     value={slide.subheading ?? ""}
                     onChange={setSubheading}
@@ -2222,7 +2233,7 @@ function SlideEditor({
                     singleLine
                     style={{
                       fontFamily: "var(--font-sans)",
-                      fontSize: 15,
+                      fontSize: "1.56cqw", // 15pt in the export
                       color: "var(--ink-500)",
                     }}
                   />
@@ -2237,7 +2248,7 @@ function SlideEditor({
                 margin: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: 18,
+                gap: "2.5cqw", // 0.72in bullet step minus text height
               }}
             >
               {slide.bullets.map((b, i) => (
@@ -2245,17 +2256,17 @@ function SlideEditor({
                   key={i}
                   style={{
                     display: "flex",
-                    gap: 14,
+                    gap: "1.2cqw",
                     alignItems: "flex-start",
                   }}
                 >
                   <span
                     style={{
-                      width: 5,
-                      height: 5,
+                      width: "0.5cqw",
+                      height: "0.5cqw",
                       background: "var(--accent)",
                       borderRadius: "50%",
-                      marginTop: 11,
+                      marginTop: "1.1cqw",
                       flexShrink: 0,
                     }}
                   />
@@ -2266,7 +2277,7 @@ function SlideEditor({
                     placeholder="Bullet text"
                     style={{
                       fontFamily: "var(--font-sans)",
-                      fontSize: 17,
+                      fontSize: "1.875cqw", // 18pt in the export
                       lineHeight: 1.45,
                       color: "var(--ink-700)",
                       flex: 1,
@@ -2323,14 +2334,14 @@ function SlideEditor({
           <div
             style={{
               position: "absolute",
-              right: 40,
-              bottom: 28,
+              right: "3cqw",
+              bottom: "2cqw",
               display: "flex",
               alignItems: "center",
-              gap: 4,
+              gap: "0.3cqw",
               fontFamily: "var(--font-serif)",
               fontStyle: "italic",
-              fontSize: 15,
+              fontSize: "1.35cqw", // 13pt in the export
               color: "var(--ink-500)",
               opacity: 0.7,
             }}
