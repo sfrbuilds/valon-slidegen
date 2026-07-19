@@ -15,7 +15,7 @@ const SLIDE_H = 7.5;
 function renderTitleSlide(slide: Slide) {
   // 50pt line is ~0.8in; stack the subtitle and dash under the actual
   // heading height so a wrapping title never crowds them.
-  const headingLines = estimateLines(slide.heading, 11.83, 50, 3);
+  const headingLines = estimateLines(slide.heading, 11.83, 50, 3, true);
   const headingH = 0.1 + headingLines * 0.8;
   const headingY = headingLines > 2 ? 2.2 : 2.8;
   const subY = headingY + headingH + 0.1;
@@ -97,19 +97,22 @@ function renderSectionSlide(slide: Slide) {
 
 /**
  * Estimate how many lines a text run wraps to at a given font size in a
- * box of the given width. Average glyph width is taken as 0.62x the font
- * size, calibrated against real exports (a 32pt heading wraps at about
- * 3.8 characters per inch). Deliberately conservative: a borderline text
- * gets the taller box, because an overestimated box costs whitespace
- * while an underestimated one prints boxes over each other.
+ * box of the given width. Average glyph width is calibrated against real
+ * exports, separately per weight because bold runs wider:
+ * - bold 32pt in an 11.83in box wraps between 48 and 51 characters,
+ *   giving ~0.55x the font size per glyph;
+ * - regular 18pt wraps around 93 characters, giving ~0.52x.
+ * Ties go to the taller box: an overestimated box costs a sliver of
+ * whitespace, an underestimated one prints boxes over each other.
  */
 function estimateLines(
   text: string,
   widthInches: number,
   fontSizePt: number,
-  maxLines: number
+  maxLines: number,
+  bold: boolean
 ): number {
-  const charWidthPt = 0.62 * fontSizePt;
+  const charWidthPt = (bold ? 0.55 : 0.52) * fontSizePt;
   const charsPerLine = Math.max(8, Math.floor((widthInches * 72) / charWidthPt));
   return Math.min(maxLines, Math.max(1, Math.ceil(text.length / charsPerLine)));
 }
@@ -126,7 +129,7 @@ function renderContentSlide(slide: Slide) {
   const HEADING_Y = 0.55;
   const HEADING_LINE_H = 0.55;
   const HEADING_H =
-    0.1 + estimateLines(slide.heading, contentWidth, 32, 3) * HEADING_LINE_H;
+    0.1 + estimateLines(slide.heading, contentWidth, 32, 3, true) * HEADING_LINE_H;
   const HEADING_ACCENT_Y = HEADING_Y + HEADING_H + 0.05;
   const HEADING_ACCENT_H = 0.05;
   const bodyTop = slide.subheading
@@ -140,7 +143,7 @@ function renderContentSlide(slide: Slide) {
   const BULLET_GAP = 0.14;
   let bulletY = bodyTop;
   const bulletBoxes = slide.bullets.map((bullet) => {
-    const lines = estimateLines(bullet, contentWidth - 0.3, 18, 5);
+    const lines = estimateLines(bullet, contentWidth - 0.3, 18, 5, false);
     const h = 0.06 + lines * BULLET_LINE_H;
     const y = bulletY;
     bulletY += h + BULLET_GAP;
