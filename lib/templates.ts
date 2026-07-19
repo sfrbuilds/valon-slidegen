@@ -47,14 +47,16 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    // Id kept as "board-read" (the template's original name): saved decks
+    // reference templates by id, so renaming it would orphan them.
     id: "board-read",
-    name: "Board Read",
-    description: "Structured board read: metrics, decisions, risks, asks.",
+    name: "Board Update",
+    description: "Structured board update: metrics, decisions, risks, asks.",
     defaultTeam: "executive-board",
     defaultAudience: "internal",
     targetLength: 10,
     outline: [
-      { layout: "title", heading: "Board read title", hint: "Deck cover: month/quarter and year, e.g. 'Board Read, November 2026'." },
+      { layout: "title", heading: "Board update title", hint: "Deck cover: month/quarter and year, e.g. 'Board Update, November 2026'." },
       { layout: "content", heading: "Executive summary", hint: "3 to 5 bullets: state of the business, what's on track, what's at risk, decisions needed today." },
       { layout: "content", heading: "Key metrics dashboard", hint: "Chart of primary KPI trend (ARR, active accounts, or platform volume). Use chartData." },
       { layout: "content", heading: "Customer and revenue update", hint: "New logos, expansions, churn commentary. Bullets, precise." },

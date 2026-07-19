@@ -58,7 +58,7 @@ export default function AboutPage() {
             },
             {
               name: "Templates for common formats",
-              text: "Investor updates, board reads, pipeline reviews, launch briefs, and more. Each is a proven slide structure; the copy still comes from your brief.",
+              text: "Investor updates, board updates, pipeline reviews, launch briefs, and more. Each is a proven slide structure; the copy still comes from your brief.",
             },
             {
               name: "Revision by chat",
@@ -70,7 +70,7 @@ export default function AboutPage() {
             },
             {
               name: "Team-aware writing",
-              text: "Eight writing profiles, one per team and audience pair. A board read and a customer pitch follow different rules; hover the tone line to see them.",
+              text: "Eight writing profiles, one per team and audience pair. A board update and a customer pitch follow different rules; hover the tone line to see them.",
             },
             {
               name: "Review",
@@ -134,7 +134,7 @@ export default function AboutPage() {
           deck. Say what the presentation is for and who will read it.
           Include the numbers that matter, exactly as you want them to
           appear. Name the decision or ask if there is one. A brief like
-          &ldquo;5-slide board read: ARR $250M, 40% YoY, runway 22 months,
+          &ldquo;5-slide board update: ARR $250M, 40% YoY, runway 22 months,
           decision needed on the Phoenix expansion&rdquo; will draft
           dramatically better than &ldquo;make a deck about Q3&rdquo;.
         </p>

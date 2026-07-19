@@ -51,7 +51,7 @@ npm test            # vitest unit tests on the pure lib/ layer
   (PDF / DOCX / TXT / MD), optional template. Eight tone profiles, one per
   team x audience pair, previewable at setup.
 - **Eight deck templates** with slide-by-slide outlines (Investor Update,
-  Board Read, GTM Pipeline Review, Product Launch Brief, New Ventures Pitch,
+  Board Update, GTM Pipeline Review, Product Launch Brief, New Ventures Pitch,
   Quarterly Planning, Product Release Notes, Partner Pitch: New Vertical).
   Outlines shape structure; the model writes the copy.
 - **Chat revision, slide or deck scope**: "This slide" revises the selected
@@ -118,7 +118,7 @@ slide preview. Iterate on slides individually or the whole deck.
 
 Designed around concrete recurring jobs: a GTM/growth person building a
 quarterly pipeline review (hence first-class charts), a Chief of Staff
-preparing a board read or investor update (hence the Executive & Board
+preparing a board update or investor update (hence the Executive & Board
 tone and the "Illustrative data" guard), Product & Engineering writing a
 launch brief or release notes, New Ventures pitching a partner. Team x
 audience and template selection change the prompts, so the same brief

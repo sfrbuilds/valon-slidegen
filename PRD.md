@@ -7,7 +7,7 @@ features, setup, and architecture in [README.md](./README.md).
 ## 1. Overview & objectives
 
 **Problem.** Valon teams produce the same decks on a recurring cadence
-(board reads, investor updates, pipeline reviews, launch briefs) and each
+(board updates, investor updates, pipeline reviews, launch briefs) and each
 one starts from a blank slide. The drafting is slow, the tone drifts by
 author, and the numbers-heavy decks that quarterly reporting demands need
 charts that generic AI slide tools either can't produce or bake into
@@ -76,9 +76,9 @@ product (not hypothetical: these drove the template set and tone system):
 - **GTM / growth lead** preparing a quarterly pipeline review. Pain:
   chart-heavy, number-driven decks take hours; generic tools can't do
   editable charts. → "GTM Pipeline Review" template, chart primitive.
-- **Chief of Staff / exec** assembling a board read or investor update.
+- **Chief of Staff / exec** assembling a board update or investor update.
   Pain: highest-stakes audience, zero tolerance for invented figures or
-  off-register tone. → "Board Read" / "Investor Update" templates,
+  off-register tone. → "Board Update" / "Investor Update" templates,
   Executive & Board tone, mandatory dummy-data labeling.
 - **Product & Engineering lead** writing a launch brief or release notes.
   Pain: translating internal work into audience-appropriate copy. →

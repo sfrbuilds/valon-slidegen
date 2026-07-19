@@ -120,7 +120,7 @@ Rules for the shape:
 ${CHART_DATA_SCHEMA}
 
 Rules for "deckTitle":
-- Write it as a short, natural document label (as it would appear in a file name or a deck library), 2 to 6 words, no colons or dashes, no marketing headline styling. Examples: "Q4 Investor Update Snapshot", "New Ventures Board Read", "GTM Pipeline Review Nov 2026".
+- Write it as a short, natural document label (as it would appear in a file name or a deck library), 2 to 6 words, no colons or dashes, no marketing headline styling. Examples: "Q4 Investor Update Snapshot", "New Ventures Board Update", "GTM Pipeline Review Nov 2026".
 - For a single-slide deck, deckTitle should read as a short document name distinct from the slide's own heading. Never leave it mid-phrase or truncated.
 `.trim();
 

@@ -15,8 +15,8 @@ feature list:
 
 - **GTM / Growth**: quarterly pipeline reviews ("GTM Pipeline Review"
   template).
-- **Chief of Staff / Executive**: board reads and investor updates
-  ("Board Read", "Investor Update" templates).
+- **Chief of Staff / Executive**: board updates and investor updates
+  ("Board Update", "Investor Update" templates).
 - **Product & Engineering**: launch briefs and release notes ("Product
   Launch Brief", "Product Release Notes").
 - **New Ventures**: internal and partner pitches ("New Ventures Pitch",
@@ -56,7 +56,7 @@ because each one capped everything built on top of it:
   rail with add / delete / drag-to-reorder, and chat revision at slide
   or deck scope. The exported file should not be the first place a user
   can fix a word.
-- **Charts are first-class, not garnish.** Board reads, investor
+- **Charts are first-class, not garnish.** Board updates, investor
   updates, and pipeline reviews are chart-driven documents, so charts
   are a typed primitive with their own intent detection, honesty
   labeling, and native editable export. Generated images are the

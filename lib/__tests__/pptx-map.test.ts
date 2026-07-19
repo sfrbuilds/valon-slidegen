@@ -7,7 +7,7 @@ describe("slugify", () => {
     expect(slugify("Q4 Investor Update")).toBe("q4-investor-update");
   });
   it("strips unsafe filename characters", () => {
-    expect(slugify("Board Read: Nov / Dec 2026!")).toBe("board-read-nov-dec-2026");
+    expect(slugify("Board Update: Nov / Dec 2026!")).toBe("board-update-nov-dec-2026");
   });
   it("falls back for empty or symbol-only titles", () => {
     expect(slugify("")).toBe("valon-deck");

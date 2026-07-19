@@ -202,7 +202,7 @@ describe("parseDeckDraft", () => {
 describe("markdown stripping at the boundary", () => {
   it("removes inline markdown the model emits despite the plain-text rule", () => {
     const raw = JSON.stringify({
-      deckTitle: "**Q3 Board Read**",
+      deckTitle: "**Q3 Board Update**",
       slides: [
         {
           layout: "content",
@@ -218,7 +218,7 @@ describe("markdown stripping at the boundary", () => {
     const result = parseDeckDraft(raw);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.deckTitle).toBe("Q3 Board Read");
+    expect(result.value.deckTitle).toBe("Q3 Board Update");
     const slide = result.value.slides[0];
     expect(slide.heading).toBe("Strategic Priorities");
     expect(slide.subheading).toBe("Our focus areas");
