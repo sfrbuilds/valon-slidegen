@@ -58,7 +58,7 @@ export const TEMPLATES: Template[] = [
     outline: [
       { layout: "title", heading: "Board update title", hint: "Deck cover: month/quarter and year, e.g. 'Board Update, November 2026'." },
       { layout: "content", heading: "Executive summary", hint: "3 to 5 bullets: state of the business, what's on track, what's at risk, decisions needed today." },
-      { layout: "content", heading: "Key metrics dashboard", hint: "Chart of primary KPI trend (ARR, active accounts, or platform volume). Use chartData." },
+      { layout: "content", heading: "Key metrics dashboard", hint: "Chart of primary KPI trend (ARR, active accounts, or platform volume). Use chartData, plus 2 or 3 short takeaway bullets alongside the chart." },
       { layout: "content", heading: "Customer and revenue update", hint: "New logos, expansions, churn commentary. Bullets, precise." },
       { layout: "content", heading: "Product and engineering update", hint: "What shipped this period, what's next, meaningful KPIs (uptime, latency, feature adoption)." },
       { layout: "content", heading: "Hiring and org update", hint: "Headcount by function, key hires closed, open searches. A small chart or clean bullets." },

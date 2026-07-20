@@ -118,6 +118,35 @@ describe("mapSlide (content)", () => {
     expect(spec.chart!.dummyChip).toBeNull();
   });
 
+  it("gives a bullet-less chart the full slide width", () => {
+    const spec = mapSlide({
+      ...baseContent,
+      bullets: [],
+      chartData: {
+        type: "line",
+        labels: ["Q1", "Q2"],
+        series: [{ name: "ARR ($M)", values: [24.1, 27.8] }],
+        isDummyData: false,
+      },
+    });
+    if (spec.layout !== "content") throw new Error("wrong layout");
+    expect(spec.chart!.x).toBeCloseTo(0.75);
+    expect(spec.chart!.w).toBeCloseTo(11.83);
+    // With bullets present the chart stays in the right column.
+    const withBullets = mapSlide({
+      ...baseContent,
+      chartData: {
+        type: "line",
+        labels: ["Q1", "Q2"],
+        series: [{ name: "ARR ($M)", values: [24.1, 27.8] }],
+        isDummyData: false,
+      },
+    });
+    if (withBullets.layout !== "content") throw new Error("wrong layout");
+    expect(withBullets.chart!.x).toBeCloseTo(7.7);
+    expect(withBullets.chart!.w).toBeCloseTo(4.9);
+  });
+
   it("chart takes the visual slot over a stale image", () => {
     const spec = mapSlide({
       ...baseContent,

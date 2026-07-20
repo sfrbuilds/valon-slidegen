@@ -122,7 +122,13 @@ function renderContentSlide(slide: Slide) {
   const hasChart = Boolean(slide.chartData);
   const hasImage = Boolean(slide.imageData) && !hasChart;
   const hasSideVisual = hasChart || hasImage;
-  const contentWidth = hasSideVisual ? 6.7 : 11.83;
+  // A visual with no bullets takes the full slide width below the
+  // heading instead of leaving an empty text column (mirrors the
+  // preview layout).
+  const visualOnly = hasSideVisual && slide.bullets.length === 0;
+  const contentWidth = hasSideVisual && !visualOnly ? 6.7 : 11.83;
+  const visualX = visualOnly ? 0.75 : 7.7;
+  const visualW = visualOnly ? 11.83 : 4.9;
   // The heading box hugs the estimated text height; the dash and body
   // are placed relative to it, so a single-line heading pulls the whole
   // slide body up instead of leaving a gap under the headline.
@@ -201,23 +207,23 @@ function renderContentSlide(slide: Slide) {
     image: hasImage
       ? {
           data: slide.imageData!,
-          x: 7.7,
+          x: visualX,
           y: HEADING_ACCENT_Y + 0.05,
-          w: 4.9,
+          w: visualW,
           h: 4.3,
         }
       : null,
     chart: hasChart
       ? {
           data: slide.chartData!,
-          x: 7.7,
+          x: visualX,
           y: HEADING_ACCENT_Y + 0.05,
-          w: 4.9,
+          w: visualW,
           h: 4.3,
           dummyChip: slide.chartData!.isDummyData
             ? {
                 text: "Illustrative data",
-                x: 7.7,
+                x: visualX,
                 y: HEADING_ACCENT_Y + 4.4,
                 w: 1.5,
                 h: 0.3,
@@ -230,9 +236,9 @@ function renderContentSlide(slide: Slide) {
           caption: slide.chartData!.caption
             ? {
                 text: slide.chartData!.caption,
-                x: slide.chartData!.isDummyData ? 9.3 : 7.7,
+                x: slide.chartData!.isDummyData ? visualX + 1.6 : visualX,
                 y: HEADING_ACCENT_Y + 4.4,
-                w: slide.chartData!.isDummyData ? 3.3 : 4.9,
+                w: slide.chartData!.isDummyData ? visualW - 1.6 : visualW,
                 h: 0.35,
                 color: BRAND.colors.ink500.replace("#", ""),
               }

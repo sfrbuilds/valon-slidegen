@@ -1761,7 +1761,9 @@ function ChartPanel({ data }: { data: ChartData }) {
       )}
       <div style={{ flex: 1, minHeight: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <Chart data={rows} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+          {/* Top margin fits the value label above the highest point;
+              at 8px the label on a point near the axis max was clipped. */}
+          <Chart data={rows} margin={{ top: 26, right: 16, left: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="2 4" stroke="#E5E1DA" vertical={false} />
             <XAxis
               dataKey="label"
@@ -2195,7 +2197,12 @@ function SlideEditor({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: hasSideVisual ? "1.1fr 1fr" : "1fr",
+            // A visual with no bullets takes the full slide width below
+            // the heading instead of leaving an empty text column.
+            gridTemplateColumns:
+              hasSideVisual && slide.bullets.length > 0 ? "1.1fr 1fr" : "1fr",
+            gridTemplateRows:
+              hasSideVisual && slide.bullets.length === 0 ? "auto 1fr" : undefined,
             gap: "2cqw", // 0.25in between text and visual in the export
             height: "100%",
           }}
