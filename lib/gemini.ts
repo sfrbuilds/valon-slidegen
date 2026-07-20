@@ -16,12 +16,15 @@ export function getClient(): GoogleGenAI {
   return cachedClient;
 }
 
+// Defaults are the current STABLE models (July 2026): preview models
+// carry tighter rate limits and deprecation windows, which is the wrong
+// trade for a tool meant to run reliably. Both are env-overridable.
 export function textModel(): string {
-  return process.env.GOOGLE_TEXT_MODEL || "gemini-2.5-flash";
+  return process.env.GOOGLE_TEXT_MODEL || "gemini-3.5-flash";
 }
 
 export function imageModel(): string {
-  return process.env.GOOGLE_IMAGE_MODEL || "gemini-2.5-flash-image";
+  return process.env.GOOGLE_IMAGE_MODEL || "gemini-3.1-flash-image";
 }
 
 /**
