@@ -142,6 +142,19 @@ describe("buildEvalPrompt review scope", () => {
     expect(prompt).not.toContain("on-brand");
   });
 
+  it("renders charts visibly in the slide dump so the reviewer sees them", () => {
+    // Live failure, pinned: a chart represented only by its caption led
+    // the reviewer to flag it as missing despite being on the slide.
+    const prompt = buildEvalPrompt({ deck, slides, chatHistory: [] });
+    expect(prompt).toContain("chart (bar): ARR ($M): 25 [labeled illustrative]");
+  });
+
+  it("scopes the reviewer away from feature auditing and deck structure", () => {
+    const prompt = buildEvalPrompt({ deck, slides, chatHistory: [] });
+    expect(prompt).toContain("Never flag missing features or unfulfilled brief instructions");
+    expect(prompt).toContain("Never flag the deck's slide count");
+  });
+
   it("includes the reference document text, not just its filename", () => {
     const prompt = buildEvalPrompt({
       deck: {

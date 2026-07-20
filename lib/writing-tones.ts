@@ -147,7 +147,7 @@ export const TONES: Tone[] = [
       "Board updates, strategic reviews, executive-level briefings for internal audiences.",
     rules: [
       "Lead with the number and the takeaway.",
-      "Structure around three key strategic points, not comprehensive coverage.",
+      "Every slide leads with its single takeaway; cut detail that does not change a decision.",
       "Numbers-first; back every claim with concrete data.",
       "Direct and decisive; no throat-clearing.",
       "Flag risks and opportunities with clarity.",
@@ -155,7 +155,7 @@ export const TONES: Tone[] = [
     ],
     avoid: [
       "Buzzwords and corporate euphemisms.",
-      "Priority dilution across too many topics.",
+      "Burying the takeaway under exhaustive detail on a slide.",
       "Filler and ceremony.",
     ],
   },

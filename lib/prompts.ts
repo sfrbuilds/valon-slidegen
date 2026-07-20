@@ -171,6 +171,9 @@ Grounding rules for the review:
 - Faithful restatements of supported facts are grounded.
 - Derived values are acceptable only when clearly labeled as calculated and the calculation follows directly from provided facts without unstated assumptions. Otherwise, flag them or require an illustrative label.
 - If the source materials do not recommend a decision, flag any recommendation presented as the company's position. Presenting decision options is acceptable.
+Scope limits, equally binding:
+- Review the slides as they exist. Never flag missing features or unfulfilled brief instructions (such as a requested chart); the application enforces those separately, and the deck may satisfy them on a slide other than the one you are reading.
+- Never flag the deck's slide count, breadth of topics, or overall structure: structure follows the template and brief the user chose. Tone rules apply to the writing on each slide, not to how many slides exist.
 `.trim();
 
 const EVAL_RESPONSE_SHAPE = `
@@ -418,12 +421,20 @@ export function buildEvalPrompt(input: {
       const header = `Slide ${index + 1} [${slide.layout}]: ${slide.heading}`;
       const sub = slide.subheading ? `  subtitle: ${slide.subheading}` : null;
       const bullets = slide.bullets.map((b) => `  - ${b}`);
-      // Chart values are verified mechanically (lib/chart-grounding.ts),
-      // but the caption is prose only this review sees.
+      // Charts must be visible to the reviewer, or it will judge a deck
+      // it cannot see (a live review flagged a chart as missing when it
+      // was on the slide, represented only by its optional caption).
+      // Values are still verified mechanically (lib/chart-grounding.ts);
+      // this rendering is for the reviewer's situational awareness.
+      const chart = slide.chartData
+        ? `  chart (${slide.chartData.type}): ${slide.chartData.series
+            .map((se) => `${se.name}: ${se.values.join(", ")}`)
+            .join(" | ")}${slide.chartData.isDummyData ? " [labeled illustrative]" : ""}`
+        : null;
       const caption = slide.chartData?.caption
         ? `  chart caption: ${slide.chartData.caption}`
         : null;
-      return [header, sub, ...bullets, caption].filter(Boolean).join("\n");
+      return [header, sub, ...bullets, chart, caption].filter(Boolean).join("\n");
     })
     .join("\n");
   // Only what the user themself wrote counts as a grounding source;
