@@ -64,7 +64,7 @@ export const TEMPLATES: Template[] = [
       { layout: "content", heading: "Product and engineering update", hint: "What shipped this period, what's next, meaningful KPIs (uptime, latency, feature adoption)." },
       { layout: "content", heading: "Hiring and org update", hint: "Headcount by function, key hires closed, open searches. A small chart or clean bullets." },
       { layout: "content", heading: "Financial snapshot", hint: "Cash on hand, runway, burn trend. Include a chart if the trend matters." },
-      { layout: "content", heading: "Outlook: next two quarters", hint: "Targets for the coming two quarters (revenue run-rate, serviced volume, key launches). Chart the projected trend ONLY from targets stated in the source material, clearly labeled as targets, never invented." },
+      { layout: "content", heading: "Outlook: next two quarters", hint: "Targets for the coming two quarters (revenue run-rate, serviced volume, key launches). Chart the projected trend ONLY from targets stated in the source material, clearly labeled as targets, never invented. At most 4 tight bullets." },
       { layout: "section", heading: "Risks and decisions", hint: "Divider slide setting up the second half." },
       { layout: "content", heading: "Top risks and mitigations", hint: "3 to 5 risks in a table-like bullet format: risk, likelihood, mitigation. Honest, not performative." },
       { layout: "content", heading: "Decisions requested from the board", hint: "Specific asks with context: what, why, by when. One per line." },

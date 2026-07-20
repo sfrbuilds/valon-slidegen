@@ -2337,35 +2337,39 @@ function SlideEditor({
             </div>
           )}
 
-          {/* Valon watermark bottom-right */}
-          <div
-            style={{
-              position: "absolute",
-              right: "3cqw",
-              bottom: "2cqw",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.3cqw",
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              fontSize: "1.35cqw", // 13pt in the export
-              color: "var(--ink-500)",
-              opacity: 0.7,
-            }}
-          >
-            valon
-            <span
-              style={{
-                width: 5,
-                height: 5,
-                borderRadius: "50%",
-                background: "var(--accent)",
-                marginLeft: 2,
-              }}
-            />
-          </div>
         </div>
       )}
+
+      {/* Valon watermark bottom-right, every layout (mirrors export) */}
+      <div
+        style={{
+          position: "absolute",
+          right: "3cqw",
+          bottom: "2cqw",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.3cqw",
+          fontFamily: "var(--font-serif)",
+          fontStyle: "italic",
+          fontSize: "1.35cqw", // 13pt in the export
+          color:
+            slide.layout === "section"
+              ? "var(--paper-white)"
+              : "var(--ink-500)",
+          opacity: 0.7,
+        }}
+      >
+        valon
+        <span
+          style={{
+            width: 5,
+            height: 5,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            marginLeft: 2,
+          }}
+        />
+      </div>
     </Card>
   );
 }

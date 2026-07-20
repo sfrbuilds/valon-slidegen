@@ -151,7 +151,7 @@ export async function POST(req: Request) {
         });
       }
 
-      // Valon watermark bottom-right (content slides only)
+      // Valon watermark bottom-right (all layouts)
       if ("watermark" in spec && spec.watermark) {
         slide.addText(spec.watermark.text, {
           x: spec.watermark.x,

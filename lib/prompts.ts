@@ -70,6 +70,7 @@ Rules for charts:
 - When the brief provides only part of a series, either chart only the provided values or fabricate the rest and set isDummyData to true.
 - Use "bar" for discrete categories (quarters, segments, cohorts) and "line" for continuous trends over time.
 - Labels and each series' values must have equal length.
+- Labels must be meaningful category names from the source material ("Q3 2025", "Q4 2025", segment names). Never index numbers like "1", "2", "3": an axis labeled 1-2-3 is a broken chart.
 - Series "name" should carry the unit (e.g. "AUM ($B)", "Loans processed (K)", "Growth (%)"), not just the metric. This is what renders in the tooltip and, for multi-series, in the legend.
 - ALWAYS include "yAxisLabel" with a short unit label (e.g. "$B", "% MoM", "loans"). The y-axis is unlabeled without it.
 - ALWAYS include a short "caption" that puts the chart in one sentence of context ("Illustrative quarterly AUM growth"). The caption renders below the chart.
@@ -113,6 +114,7 @@ Rules for the shape:
 - For multi-slide decks, the first slide must use the "title" layout, and "section" should appear sparingly as a divider or closer.
 - For a single-slide deck, use the "content" layout with the actual message (heading plus 2-5 bullets). Do not use "title" for a one-slide deck.
 - Content slides carry 2-5 tight bullets. Never paragraph-length bullets.
+- Match the brief's reporting period. When the brief names a period (a quarter, a month), commentary and comparisons stay at that altitude: quarter-over-quarter and year-over-year for a quarterly update. Figures from other periods in the source material (such as full-year historicals) are background, and appear only where the brief asks for them.
 - Every text field is plain text. No markdown syntax anywhere: no **bold**, no _italics_, no backticks, no "#" heading prefixes, no leading "-" inside bullet strings. Emphasis comes from the slide design, not from markup.
 - When the brief culminates in a decision or approval ask, close with a decision slide that does real work: name the decision, frame the options, and carry bracketed placeholders for whatever the brief did not provide (investment required, expected return, supporting evidence, key risks). A bare "decision required" heading is too thin.
 - Add "imageIdea" only where supporting imagery genuinely helps (roughly a third of content slides): a short prompt for an abstract, editorial illustration. Never propose text, charts with numbers, screenshots, or people's faces in the imageIdea.

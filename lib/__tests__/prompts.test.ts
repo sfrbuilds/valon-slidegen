@@ -16,6 +16,16 @@ const base = {
   contextDocs: [],
 };
 
+describe("buildDraftPrompt content rules", () => {
+  it("carries the reporting-period altitude rule", () => {
+    // Live failure, pinned: a quarterly update surfaced full-year
+    // historicals from the reference document as a headline talking
+    // point instead of staying at the quarter's altitude.
+    const prompt = buildDraftPrompt({ ...base, targetLength: null });
+    expect(prompt).toContain("Match the brief's reporting period.");
+  });
+});
+
 describe("buildDraftPrompt length guidance", () => {
   it("freeform (null): sizes from the brief, never forces a count", () => {
     const prompt = buildDraftPrompt({ ...base, targetLength: null });

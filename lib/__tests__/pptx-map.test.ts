@@ -65,6 +65,31 @@ describe("mapSlide (content) heading accent placement", () => {
     expect(bullets[0].h).toBeGreaterThan(bullets[2].h);
   });
 
+  it("shrinks bullet type instead of letting the stack overflow the slide", () => {
+    const long = "Revenue run-rate targets and supporting commentary that wraps to several lines when the text column is narrowed by a side chart on the slide.";
+    const overfull = mapSlide({
+      ...baseContent,
+      heading: "Outlook with a heading long enough to wrap onto a second line here",
+      bullets: [long, long, long, long, long, long],
+      chartData: {
+        type: "line",
+        labels: ["Q2 2026", "Q3 2026", "Q4 2026"],
+        series: [{ name: "Run-rate ($M)", values: [110, 118, 128] }],
+        isDummyData: true,
+      },
+    });
+    if (overfull.layout !== "content") return;
+    const bullets = overfull.texts.filter((t) => "bullet" in t && t.bullet);
+    const last = bullets[bullets.length - 1];
+    expect(last.y + last.h).toBeLessThanOrEqual(6.75);
+    expect(bullets[0].fontSize).toBeLessThan(18);
+    // A normal slide keeps full-size type.
+    const normal = mapSlide(baseContent);
+    if (normal.layout !== "content") return;
+    const normalBullets = normal.texts.filter((t) => "bullet" in t && t.bullet);
+    expect(normalBullets[0].fontSize).toBe(18);
+  });
+
   it("keeps the body below the dash for both heading lengths", () => {
     const short = mapSlide(baseContent);
     if (short.layout !== "content") return;
@@ -176,6 +201,8 @@ describe("mapSlide (title / section)", () => {
     expect(spec.layout).toBe("title");
     if (spec.layout !== "title") return;
     expect(spec.texts).toHaveLength(2);
+    // The wordmark appears on every layout, cover included.
+    expect(spec.watermark.text).toBe("valon");
   });
 
   it("renders section slide on ink background", () => {

@@ -11,6 +11,23 @@ import { BRAND } from "./design-tokens";
 const SLIDE_W = 13.333;
 const SLIDE_H = 7.5;
 
+// Valon watermark, identical placement on every layout; only the ink
+// changes so it stays legible on the section slide's dark background.
+function watermark(color: string) {
+  return {
+    text: "valon",
+    x: 11.4,
+    y: 6.85,
+    w: 1.5,
+    h: 0.4,
+    fontFace: BRAND.pptxFonts.serif,
+    fontSize: 13,
+    italic: true,
+    color: color.replace("#", ""),
+    align: "right" as const,
+  };
+}
+
 // Layout: title
 function renderTitleSlide(slide: Slide) {
   // 50pt line is ~0.8in; stack the subtitle and dash under the actual
@@ -62,6 +79,7 @@ function renderTitleSlide(slide: Slide) {
       h: 0.06,
       fill: BRAND.colors.accent.replace("#", ""),
     },
+    watermark: watermark(BRAND.colors.ink500),
   };
 }
 
@@ -92,6 +110,7 @@ function renderSectionSlide(slide: Slide) {
       h: 0.06,
       fill: BRAND.colors.accent.replace("#", ""),
     },
+    watermark: watermark(BRAND.colors.paperWhite),
   };
 }
 
@@ -142,19 +161,34 @@ function renderContentSlide(slide: Slide) {
     ? HEADING_ACCENT_Y + 0.55
     : HEADING_ACCENT_Y + 0.35;
   // Bullets stack cumulatively: each row is sized from its own estimated
-  // wrap count (18pt line is ~0.34in), so a three-line bullet pushes the
-  // next bullet down instead of printing over it (the fixed 0.72in step
-  // assumed single-line bullets and overlapped on wordy decks).
-  const BULLET_LINE_H = 0.34;
-  const BULLET_GAP = 0.14;
-  let bulletY = bodyTop;
-  const bulletBoxes = slide.bullets.map((bullet) => {
-    const lines = estimateLines(bullet, contentWidth - 0.3, 18, 5, false);
-    const h = 0.06 + lines * BULLET_LINE_H;
-    const y = bulletY;
-    bulletY += h + BULLET_GAP;
-    return { bullet, y, h };
-  });
+  // wrap count, so a three-line bullet pushes the next bullet down
+  // instead of printing over it (the fixed 0.72in step assumed
+  // single-line bullets and overlapped on wordy decks). If the stack
+  // would run past the slide's usable height, the font steps down until
+  // it fits: smaller type on the slide beats text walking off it.
+  const MAX_BODY_BOTTOM = 6.7;
+  const sizeBullets = (fontPt: number) => {
+    const lineH = (fontPt * 1.35) / 72;
+    const gap = (fontPt * 0.55) / 72;
+    let y = bodyTop;
+    const boxes = slide.bullets.map((bullet) => {
+      const lines = estimateLines(bullet, contentWidth - 0.3, fontPt, 6, false);
+      const h = 0.06 + lines * lineH;
+      const box = { bullet, y, h, fontSize: fontPt };
+      y += h + gap;
+      return box;
+    });
+    return { boxes, bottom: y - gap };
+  };
+  // The ladder runs low because the alternative is worse: 10pt type on
+  // a degenerate slide (six wrapping bullets plus a side chart) still
+  // beats text printed past the slide edge.
+  let bulletLayout = sizeBullets(18);
+  for (const smaller of [16, 15, 14, 13, 12, 11, 10]) {
+    if (bulletLayout.bottom <= MAX_BODY_BOTTOM) break;
+    bulletLayout = sizeBullets(smaller);
+  }
+  const bulletBoxes = bulletLayout.boxes;
   return {
     layout: "content" as const,
     background: BRAND.colors.paperWhite,
@@ -189,14 +223,14 @@ function renderContentSlide(slide: Slide) {
             },
           ]
         : []),
-      ...bulletBoxes.map(({ bullet, y, h }) => ({
+      ...bulletBoxes.map(({ bullet, y, h, fontSize }) => ({
         text: bullet,
         x: 0.75,
         y,
         w: contentWidth,
         h,
         fontFace: BRAND.pptxFonts.sans,
-        fontSize: 18,
+        fontSize,
         color: BRAND.colors.ink700.replace("#", ""),
         bullet: true,
         italic: false,
@@ -254,18 +288,7 @@ function renderContentSlide(slide: Slide) {
       fill: BRAND.colors.accent.replace("#", ""),
     },
     // Small Valon watermark bottom-right (mirrors on-screen preview)
-    watermark: {
-      text: "valon",
-      x: 11.4,
-      y: 6.85,
-      w: 1.5,
-      h: 0.4,
-      fontFace: BRAND.pptxFonts.serif,
-      fontSize: 13,
-      italic: true,
-      color: BRAND.colors.ink500.replace("#", ""),
-      align: "right" as const,
-    },
+    watermark: watermark(BRAND.colors.ink500),
     accentBar: {
       x: 0.75,
       y: 6.95,
