@@ -7,8 +7,8 @@
  */
 
 // Type-only import: erased at compile time, so no runtime cycle with
-// templates.ts (which imports values from this module).
-import type { Template } from "./templates";
+// deck-templates.ts (which imports values from this module).
+import type { Template } from "./deck-templates";
 
 // -------- Enums / string unions --------
 

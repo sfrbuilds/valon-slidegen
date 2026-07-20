@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildEvalPrompt } from "@/lib/prompts";
-import { parseEvalResult } from "@/lib/deck-schema";
-import { GEMINI_EVAL_RESPONSE_SCHEMA } from "@/lib/response-schemas";
+import { parseEvalResult } from "@/lib/deck-validation";
+import { GEMINI_EVAL_RESPONSE_SCHEMA } from "@/lib/model-response-schemas";
 import { makeId, nowIso, type EvalRequest, type EvalResponse } from "@/lib/types";
 
 export const runtime = "nodejs";

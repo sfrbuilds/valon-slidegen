@@ -15,7 +15,7 @@
  *   positional merging rather than dropping all identity.
  */
 
-import type { DraftedSlide } from "./deck-schema";
+import type { DraftedSlide } from "./deck-validation";
 import { makeId, type Slide } from "./types";
 
 export type MergeOptions = {

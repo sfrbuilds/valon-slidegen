@@ -5,7 +5,7 @@
  */
 
 import type { Deck, Slide } from "./types";
-import { BRAND } from "./brand";
+import { BRAND } from "./design-tokens";
 
 // Widescreen slide dimensions in inches (pptxgenjs LAYOUT_WIDE)
 const SLIDE_W = 13.333;

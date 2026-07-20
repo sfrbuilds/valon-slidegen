@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDeckRedraftPrompt } from "@/lib/prompts";
-import { parseDeckRedraft } from "@/lib/deck-schema";
+import { parseDeckRedraft } from "@/lib/deck-validation";
 import { enforceChartGrounding, trustedChartNumbers } from "@/lib/chart-grounding";
 import { mergeDeckSlides } from "@/lib/deck-merge";
 import {
@@ -10,7 +10,7 @@ import {
   detectsImageRemoval,
   CHART_MISS_WARNING,
 } from "@/lib/chart-intent";
-import { GEMINI_DECK_REDRAFT_RESPONSE_SCHEMA } from "@/lib/response-schemas";
+import { GEMINI_DECK_REDRAFT_RESPONSE_SCHEMA } from "@/lib/model-response-schemas";
 import type { RedraftDeckRequest, RedraftDeckResponse } from "@/lib/types";
 
 export const runtime = "nodejs";

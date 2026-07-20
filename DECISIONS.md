@@ -46,7 +46,7 @@ because each one capped everything built on top of it:
 - **Minimal slide model.** The seed's data model could not represent
   layouts, charts, or notes. Replaced with a typed domain model
   (`lib/types.ts`) validated at the trust boundary
-  (`lib/deck-schema.ts`): nothing from the model becomes app state
+  (`lib/deck-validation.ts`): nothing from the model becomes app state
   without passing validation.
 
 ## Key product decisions
@@ -76,7 +76,7 @@ because each one capped everything built on top of it:
   finished deck into a reusable outline, so next quarter's version of
   the same deck starts from this quarter's structure.
 - **Tone follows team and audience.** Team x audience selects one of
-  eight tone profiles (`lib/tones.ts`), each with its own rules and
+  eight tone profiles (`lib/writing-tones.ts`), each with its own rules and
   avoid-list: "Executive & Board internal" leads with numbers and
   decisions, "GTM external" bans internal acronyms and false urgency.
   The full rules render at setup, so tone is visible product surface,
@@ -91,7 +91,7 @@ because each one capped everything built on top of it:
 ## Key engineering decisions
 
 - **Structured output over prose parsing.** Gemini `responseSchema`
-  locks JSON shape at the model level (`lib/response-schemas.ts`), and a
+  locks JSON shape at the model level (`lib/model-response-schemas.ts`), and a
   hand-rolled validator still checks everything, because schema
   conformance is not semantic correctness (equal label/value lengths,
   finite numbers, known layouts).
@@ -150,7 +150,7 @@ because each one capped everything built on top of it:
   impossible, removal intent is detected explicitly and the omission is
   then honored as a deliberate clear.
 - **localStorage behind an interface.** The take-home excludes hosting,
-  so no DB and no auth. `lib/storage.ts` isolates persistence so a real
+  so no DB and no auth. `lib/deck-storage.ts` isolates persistence so a real
   backend is a one-file swap. Known pressure point: base64 images can
   hit the localStorage quota, so writes return success/failure, the UI
   warns when an image could not be persisted, and a failed write at deck

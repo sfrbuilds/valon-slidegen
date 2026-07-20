@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveTemplateFromDeck, TEMPLATE_LIMITS } from "../templates";
+import { deriveTemplateFromDeck, TEMPLATE_LIMITS } from "../deck-templates";
 import type { Deck, Slide } from "../types";
 
 // Distinctive values: assertions check these exact numbers never appear

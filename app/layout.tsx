@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { StoreProvider } from "@/lib/store";
+import { StoreProvider } from "@/lib/deck-store";
 
 export const metadata: Metadata = {
   title: "Valon SlideGen",

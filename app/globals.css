@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Brand tokens (from lib/brand.ts, mirrored) */
+  /* Brand tokens (from lib/design-tokens.ts, mirrored) */
   --paper-white: #ffffff;
   --paper-warm-1: #f6f1ea;
   --paper-warm-2: #f3e9dd;

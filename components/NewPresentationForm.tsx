@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Textarea";
 import { Chip } from "@/components/ui/Chip";
 import { StagedProgress } from "@/components/ui/StagedProgress";
-import { useStore } from "@/lib/store";
+import { useStore } from "@/lib/deck-store";
 import {
   TEAMS,
   AUDIENCES,
@@ -30,8 +30,8 @@ import {
   type DraftDeckResponse,
   type Deck,
 } from "@/lib/types";
-import { BLANK_TEMPLATE_ID, TEMPLATES, templateById, type Template } from "@/lib/templates";
-import { getTone } from "@/lib/tones";
+import { BLANK_TEMPLATE_ID, TEMPLATES, templateById, type Template } from "@/lib/deck-templates";
+import { getTone } from "@/lib/writing-tones";
 import { detectsChartIntent } from "@/lib/chart-intent";
 
 export function NewPresentationForm() {

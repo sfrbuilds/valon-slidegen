@@ -20,8 +20,8 @@ import type {
   Team,
 } from "./types";
 import { CONTEXT_DOC_CHAR_CAP, MAX_CONTEXT_DOCS } from "./types";
-import { getTone, toneBlock } from "./tones";
-import { templateById, templateOutlineBlock, type Template } from "./templates";
+import { getTone, toneBlock } from "./writing-tones";
+import { templateById, templateOutlineBlock, type Template } from "./deck-templates";
 
 // -------- Constants: identity, brand style, response shapes --------
 

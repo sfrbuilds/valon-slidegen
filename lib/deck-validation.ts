@@ -16,8 +16,8 @@ import type {
   Team,
 } from "./types";
 import { AUDIENCES, CHART_TYPES, EVAL_VERDICTS, SLIDE_LAYOUTS, TEAMS, makeId } from "./types";
-import type { Template, TemplateOutlineSlide } from "./templates";
-import { TEMPLATE_LIMITS } from "./templates";
+import type { Template, TemplateOutlineSlide } from "./deck-templates";
+import { TEMPLATE_LIMITS } from "./deck-templates";
 
 export type ParseResult<T> =
   | { ok: true; value: T }

@@ -6,8 +6,8 @@ import {
   parseEvalResult,
   parseSlideRedraft,
   stripCodeFences,
-} from "../deck-schema";
-import { TEMPLATE_LIMITS } from "../templates";
+} from "../deck-validation";
+import { TEMPLATE_LIMITS } from "../deck-templates";
 
 const validDraft = {
   deckTitle: "Q4 Investor Update",

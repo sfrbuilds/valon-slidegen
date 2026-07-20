@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildDraftPrompt } from "@/lib/prompts";
-import { parseCustomTemplate, parseDeckDraft, toSlide } from "@/lib/deck-schema";
+import { parseCustomTemplate, parseDeckDraft, toSlide } from "@/lib/deck-validation";
 import { detectsChartIntent, CHART_MISS_WARNING } from "@/lib/chart-intent";
 import { enforceChartGrounding } from "@/lib/chart-grounding";
-import { GEMINI_DRAFT_RESPONSE_SCHEMA } from "@/lib/response-schemas";
+import { GEMINI_DRAFT_RESPONSE_SCHEMA } from "@/lib/model-response-schemas";
 import type { DraftDeckRequest, DraftDeckResponse } from "@/lib/types";
 
 export const runtime = "nodejs";

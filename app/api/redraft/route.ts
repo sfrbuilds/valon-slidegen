@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getClient, textModel, responseText } from "@/lib/gemini";
 import { buildRedraftPrompt } from "@/lib/prompts";
-import { parseSlideRedraft } from "@/lib/deck-schema";
+import { parseSlideRedraft } from "@/lib/deck-validation";
 import { enforceChartGrounding, trustedChartNumbers } from "@/lib/chart-grounding";
 import {
   detectsChartIntent,
@@ -9,7 +9,7 @@ import {
   detectsImageRemoval,
   CHART_MISS_WARNING,
 } from "@/lib/chart-intent";
-import { GEMINI_REDRAFT_RESPONSE_SCHEMA } from "@/lib/response-schemas";
+import { GEMINI_REDRAFT_RESPONSE_SCHEMA } from "@/lib/model-response-schemas";
 import type { RedraftSlideRequest, RedraftSlideResponse } from "@/lib/types";
 
 export const runtime = "nodejs";

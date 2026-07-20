@@ -8,16 +8,16 @@ export editable PPTX / Google Slides).
 
 Next.js 15 App Router + React 19 + TypeScript strict. Gemini for app
 runtime (text + image). No DB, no auth: localStorage behind the interface
-in `lib/storage.ts`. Do not add hosting or deployment config; this app is
+in `lib/deck-storage.ts`. Do not add hosting or deployment config; this app is
 localhost-only by design.
 
 ## Hard rules
 
 - Every prompt sent to Gemini lives in `lib/prompts.ts`. Never concatenate
   prompt fragments elsewhere, never hide instructions in other modules.
-- Every Gemini responseSchema lives in `lib/response-schemas.ts`.
+- Every Gemini responseSchema lives in `lib/model-response-schemas.ts`.
 - Nothing from the model becomes app state without passing a parser in
-  `lib/deck-schema.ts`. If you add a model-returned field, add validation
+  `lib/deck-validation.ts`. If you add a model-returned field, add validation
   and a test.
 - Fabricated chart numbers must carry `isDummyData: true`. The parser
   defaults to true when the field is missing, and the routes verify an
@@ -30,7 +30,7 @@ localhost-only by design.
 ## Conventions
 
 - `lib/` stays pure and testable: no React, no fetch, no Next imports
-  (except `store.tsx`, the one React file there).
+  (except `deck-store.tsx`, the one React file there).
 - API routes are thin: parse request, build prompt, call Gemini, validate,
   merge, respond. Business rules (merge semantics, intent detection) belong
   in `lib/`.

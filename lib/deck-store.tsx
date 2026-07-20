@@ -8,12 +8,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ChatMessage, Deck, Slide } from "./types";
 import { nowIso } from "./types";
-import type { Template } from "./templates";
-import { localStorageAdapter } from "./storage";
+import type { Template } from "./deck-templates";
+import { localStorageAdapter } from "./deck-storage";
 
 type StoreContext = {
   decks: Deck[];
-  // Custom (user-saved) templates; built-ins live in lib/templates.ts.
+  // Custom (user-saved) templates; built-ins live in lib/deck-templates.ts.
   templates: Template[];
   saveTemplate: (template: Template) => boolean;
   deleteTemplate: (id: string) => void;

@@ -85,27 +85,27 @@ npm test            # vitest unit tests on the pure lib/ layer
 - Next.js 15 App Router, React 19, TypeScript strict mode.
 - Gemini for text drafting and image generation (`lib/gemini.ts`), with
   `responseSchema` locking JSON shapes at the model level
-  (`lib/response-schemas.ts`).
-- Everything from the model passes `lib/deck-schema.ts` validation before
+  (`lib/model-response-schemas.ts`).
+- Everything from the model passes `lib/deck-validation.ts` validation before
   becoming app state. Nothing is trusted raw.
 - Chart intent detection (`lib/chart-intent.ts`) is a hint, not an enforcer:
   narrow patterns, one retry with a forcing directive on a miss, then a
   visible warning. A good draft is never discarded over a missing chart.
-- localStorage persistence behind a storage interface (`lib/storage.ts`)
+- localStorage persistence behind a storage interface (`lib/deck-storage.ts`)
   for a future cloud swap.
 - PPTX export is a pure mapping (`lib/pptx-map.ts`) fed to pptxgenjs.
 
 ## Key files
 
 - `lib/types.ts` - domain model
-- `lib/tones.ts` - 8 team x audience tone definitions
-- `lib/templates.ts` - 8 deck templates with slide-by-slide outlines
+- `lib/writing-tones.ts` - 8 team x audience tone definitions
+- `lib/deck-templates.ts` - 8 deck templates with slide-by-slide outlines
 - `lib/prompts.ts` - all Gemini prompts, documented
-- `lib/response-schemas.ts` - Gemini responseSchema definitions
+- `lib/model-response-schemas.ts` - Gemini responseSchema definitions
 - `lib/chart-intent.ts` - chart intent and removal detection
-- `lib/deck-schema.ts` - JSON validation for AI outputs
+- `lib/deck-validation.ts` - JSON validation for AI outputs
 - `lib/pptx-map.ts` - deck-to-pptx mapping
-- `lib/brand.ts` - brand tokens (colors, fonts, spacing)
+- `lib/design-tokens.ts` - brand tokens (colors, fonts, spacing)
 - `lib/__tests__/` - unit tests for the pure lib layer
 - `app/api/draft|redraft|redraft-deck|image|eval|export` - API routes
 

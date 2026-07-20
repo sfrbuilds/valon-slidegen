@@ -7,7 +7,7 @@ import {
   FACTUAL_GROUNDING_RULES,
 } from "../prompts";
 import type { ChatMessage, Slide } from "../types";
-import type { Template } from "../templates";
+import type { Template } from "../deck-templates";
 
 const base = {
   brief: "CEO update. 6 slides: slide 1 the quarter, slide 2 the numbers.",

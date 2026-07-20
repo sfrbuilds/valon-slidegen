@@ -11,7 +11,7 @@
  */
 
 import type { Deck } from "./types";
-import type { Template } from "./templates";
+import type { Template } from "./deck-templates";
 
 export interface Storage {
   getDecks(): Deck[];

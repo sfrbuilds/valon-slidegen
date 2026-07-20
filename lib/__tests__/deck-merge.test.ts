@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mergeDeckSlides } from "../deck-merge";
-import type { DraftedSlide } from "../deck-schema";
+import type { DraftedSlide } from "../deck-validation";
 import type { Slide } from "../types";
 
 const noRemoval = { chartRemoval: false, imageRemoval: false };

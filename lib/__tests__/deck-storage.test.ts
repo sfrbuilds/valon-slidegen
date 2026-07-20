@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { localStorageAdapter } from "../storage";
+import { localStorageAdapter } from "../deck-storage";
 import type { Deck } from "../types";
-import type { Template } from "../templates";
+import type { Template } from "../deck-templates";
 
 function makeTemplate(id: string, overrides: Partial<Template> = {}): Template {
   return {

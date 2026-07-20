@@ -191,7 +191,7 @@ Each feature lists what it does, then its acceptance criteria.
 - Next.js 15 / React 19 / TypeScript strict.
 - Gemini for all runtime AI (text + image).
 - All prompts centralized in `lib/prompts.ts`; nothing model-returned
-  becomes state without a parser in `lib/deck-schema.ts`.
+  becomes state without a parser in `lib/deck-validation.ts`.
 - localStorage behind a storage interface.
 - 502 only for unusable model output; degradable problems return
   warnings.

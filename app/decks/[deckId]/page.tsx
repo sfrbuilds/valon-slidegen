@@ -10,9 +10,9 @@ import { Card } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Textarea";
 import { Chip } from "@/components/ui/Chip";
 import { StagedProgress } from "@/components/ui/StagedProgress";
-import { useStore } from "@/lib/store";
+import { useStore } from "@/lib/deck-store";
 import { slugify } from "@/lib/pptx-map";
-import { deriveTemplateFromDeck, TEMPLATE_LIMITS } from "@/lib/templates";
+import { deriveTemplateFromDeck, TEMPLATE_LIMITS } from "@/lib/deck-templates";
 import {
   makeId,
   nowIso,
